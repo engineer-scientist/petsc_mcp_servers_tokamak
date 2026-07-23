@@ -1,0 +1,17 @@
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# Editor / OS
+*.swp
+.DS_Store
+
+# Large / generated build products (keep source + small figures/JSON)
+*.o
+*.exe
+a.out
+
+# Keep artifacts/ text logs, but ignore any large binaries dropped there
+artifacts/**/*.bin
