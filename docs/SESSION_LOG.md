@@ -79,12 +79,34 @@ no-docs/no-RAG code-gen, higher code-gen loop cap + prompt to return after first
 - **Built-in orchestrator demo** (task #5) not yet run.
 - Push the `tokamak-improvements` branch upstream (user; it's a fork of gitlab petsc).
 
-**EXACT NEXT STEP (start here next session).**
-> 1) Restyle `slides/make_slides.py` onto `slides/Argonne_Powerpoint_Template.pptx`.
-> 2) Add a physical shaped Solov'ev/Cerfon–Freidberg equilibrium mode + q-profile figure
->    (extend the codegen spec or add a post-processor), cross-check vs `~/tokamak` FreeGS.
-> 3) Run the built-in `orchestrator` agent end-to-end (see docs/USAGE.md §4) and capture it.
-> 4) Fill presenter details in `poster/abstract.md`; design the poster PDF.
+**Deliverable polish added later in Session 1 (2026-07-23):**
+- `docs/AGENT_SYSTEM_CHANGES.md` — precise before/after of every change vs upstream, and
+  `patches/0001–0003` committed (they had been generated into the wrong dir earlier; fixed).
+- Poster rebuilt with poster-legible fonts (title 66 / headers 40 / body 30) via a
+  two-backend `poster/make_poster.py`; added `poster/USRSE26_poster_preview.png/.pdf`.
+- Slides rebuilt via a two-backend `slides/make_slides.py`; added a GitHub-viewable
+  `slides/petsc_multiagent_tokamak.pdf` (10 pages). Both generators render a matplotlib
+  preview/PDF (no LibreOffice on this host) that stays in sync with the .pptx.
+- Note: PDFs can be viewed directly with the Read tool's `pages=` param (no PNG step).
+
+**EXACT NEXT STEP (start here next session) — Task 5: demo the built-in orchestrator.**
+> Run the shipped `orchestrator_mcp_server` LLM agent end-to-end on the tokamak problem
+> and capture its transcript/artifacts. See `docs/USAGE.md` §4:
+> ```bash
+> cd /home/sarthak.sharma/petsc_mcp_servers
+> env PYTHONPATH=$PWD PETSC_MCP_SERVERS_STDIO=True /home/sarthak.sharma/.venvs/mcp-test/bin/python -c \
+>  "import asyncio, orchestrator_mcp_server as o; \
+>   print(asyncio.run(o.orchestrate_async('the Grad-Shafranov equilibrium for a tokamak plasma')))"
+> ```
+> Caveats to expect: it nests deeply (orchestrator → inner Claude → 4 sub-servers, and the
+> code generator spawns yet another Claude), so it is slow and may need a retry; the
+> orchestrator's `allowed_tools=["mcp__*"]` is ignored by the CLI but bypassPermissions
+> covers it; docs/RAG are absent (our graceful-degradation patch handles that). Consider
+> capturing its output under `artifacts/orchestrator-<date>/`.
+>
+> Then (later): restyle slides onto `slides/Argonne_Powerpoint_Template.pptx`; add a
+> shaped Solov'ev/Cerfon–Freidberg equilibrium + q-profile (cross-check vs `~/tokamak`
+> FreeGS); fill presenter details in `poster/abstract.md` and export the poster to PDF.
 
 **Reproduce the canonical run + verification.**
 ```bash
