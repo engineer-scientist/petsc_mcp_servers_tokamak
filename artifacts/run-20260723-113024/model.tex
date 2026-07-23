@@ -1,0 +1,32 @@
+
+% ---- Grad-Shafranov equilibrium: strong and weak forms ----
+% Unknown: poloidal flux psi(R,Z) on poloidal cross-section Omega, R > 0.
+% mu0: vacuum permeability, p(psi): pressure, F(psi)=R B_phi: current function.
+
+% Grad-Shafranov (self-adjoint) operator:
+\begin{equation*}
+  \Delta^{*}\psi \;\equiv\;
+  R\,\frac{\partial}{\partial R}\!\left(\frac{1}{R}\frac{\partial \psi}{\partial R}\right)
+  + \frac{\partial^{2}\psi}{\partial Z^{2}}
+  \;=\; R^{2}\,\nabla\!\cdot\!\left(\frac{1}{R^{2}}\nabla\psi\right).
+\end{equation*}
+
+% Strong form + Dirichlet boundary condition:
+\begin{align*}
+  \Delta^{*}\psi
+    &= -\,\mu_{0}\,R^{2}\,\frac{dp}{d\psi}
+       \;-\; F\,\frac{dF}{d\psi}
+       && \text{in } \Omega, \\
+  \psi &= \psi_{b}
+       && \text{on } \partial\Omega .
+\end{align*}
+
+% Weak form:
+% Find psi in H^1(Omega) with psi = psi_b on the boundary such that
+% for all v in H^1_0(Omega):
+\begin{equation*}
+  \int_{\Omega} \frac{1}{R^{2}}\,\nabla\psi\cdot\nabla v \; dR\,dZ
+  \;=\;
+  \int_{\Omega} \left(\mu_{0}\,\frac{dp}{d\psi}
+      + \frac{1}{R^{2}}\,F\,\frac{dF}{d\psi}\right) v \; dR\,dZ .
+\end{equation*}

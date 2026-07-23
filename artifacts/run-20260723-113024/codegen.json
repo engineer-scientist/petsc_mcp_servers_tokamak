@@ -1,0 +1,5 @@
+{
+  "output": "Grid Nx Nz            : 65 65\nSpacings hR hZ        : 0.03125 0.046875\nMax-norm error inf    : 0.000210906\nDiscrete L2 error     : 0.00025865\nSNESConvergedReason   : CONVERGED_FNORM_RELATIVE",
+  "response_loops": 21,
+  "tool_cnt": 5
+}

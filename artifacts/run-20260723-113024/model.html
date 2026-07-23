@@ -1,0 +1,55 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Grad-Shafranov Equilibrium</title>
+  <script>
+    window.MathJax = {
+      tex: { inlineMath: [['\\(', '\\)']], displayMath: [['\\[', '\\]']] }
+    };
+  </script>
+  <script id="MathJax-script" async
+    src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+</head>
+<body>
+  <h1>Grad&ndash;Shafranov Equation (axisymmetric ideal-MHD equilibrium)</h1>
+
+  <p>Unknown: poloidal magnetic flux \(\psi(R,Z)\) on the poloidal cross-section
+  \(\Omega\subset\{(R,Z):R>0\}\), with \(\mu_0\) the vacuum permeability,
+  \(p(\psi)\) the plasma pressure and \(F(\psi)=R\,B_\phi\) the poloidal current
+  function. It is a stationary (time-independent) problem.</p>
+
+  <h2>Strong form</h2>
+  <p>Grad&ndash;Shafranov operator:</p>
+  \[
+    \Delta^{*}\psi \;\equiv\;
+    R\,\frac{\partial}{\partial R}\!\left(\frac{1}{R}\frac{\partial \psi}{\partial R}\right)
+    + \frac{\partial^{2}\psi}{\partial Z^{2}}
+    \;=\;
+    R^{2}\,\nabla\!\cdot\!\left(\frac{1}{R^{2}}\nabla\psi\right).
+  \]
+  <p>Equilibrium equation and Dirichlet boundary condition:</p>
+  \[
+    \Delta^{*}\psi \;=\; -\,\mu_{0}\,R^{2}\,\frac{dp}{d\psi}
+                       \;-\; F\,\frac{dF}{d\psi}
+    \qquad \text{in } \Omega,
+  \]
+  \[
+    \psi \;=\; \psi_{b} \qquad \text{on } \partial\Omega .
+  \]
+
+  <h2>Weak form</h2>
+  <p>Find \(\psi\in H^{1}(\Omega)\) with \(\psi=\psi_{b}\) on \(\partial\Omega\)
+  such that for all test functions \(v\in H^{1}_{0}(\Omega)\):</p>
+  \[
+    \int_{\Omega} \frac{1}{R^{2}}\,\nabla\psi\cdot\nabla v \; dR\,dZ
+    \;=\;
+    \int_{\Omega} \left(\mu_{0}\,\frac{dp}{d\psi}
+      + \frac{1}{R^{2}}\,F\,\frac{dF}{d\psi}\right) v \; dR\,dZ ,
+  \]
+  <p>obtained by dividing the strong form by \(R^{2}\), multiplying by \(v\),
+  integrating over \(\Omega\), and integrating by parts (the boundary term
+  vanishes since \(v=0\) on \(\partial\Omega\)).</p>
+</body>
+</html>

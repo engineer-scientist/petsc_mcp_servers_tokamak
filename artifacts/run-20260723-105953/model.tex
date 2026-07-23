@@ -1,0 +1,35 @@
+
+% Grad-Shafranov equation: strong and weak form
+% Name: Grad-Shafranov equation. Not time-dependent (equilibrium).
+
+% Grad-Shafranov operator:
+\begin{equation}
+  \Delta^{*}\psi
+  = R\,\frac{\partial}{\partial R}\!\left(\frac{1}{R}\frac{\partial \psi}{\partial R}\right)
+  + \frac{\partial^{2}\psi}{\partial Z^{2}}
+  = R^{2}\,\nabla\!\cdot\!\left(\frac{1}{R^{2}}\nabla\psi\right).
+\end{equation}
+
+% Strong form:
+\begin{align}
+  \Delta^{*}\psi
+  &= -\,\mu_{0}\,R^{2}\,\frac{dp}{d\psi} - F\,\frac{dF}{d\psi}
+  && \text{in } \Omega, \\
+  \psi &= \psi_{b}
+  && \text{on } \partial\Omega \quad (\text{Dirichlet}).
+\end{align}
+
+% Equivalent divergence (self-adjoint) form, after dividing by R^2:
+\begin{equation}
+  -\,\nabla\!\cdot\!\left(\frac{1}{R^{2}}\nabla\psi\right)
+  = \mu_{0}\,\frac{dp}{d\psi} + \frac{1}{R^{2}}\,F\,\frac{dF}{d\psi}
+  \qquad \text{in } \Omega.
+\end{equation}
+
+% Weak form: find psi in H^1(Omega) with psi = psi_b on the boundary,
+% such that for all v in H^1_0(Omega):
+\begin{equation}
+  \int_{\Omega} \frac{1}{R^{2}}\,\nabla\psi\cdot\nabla v \,\, dR\,dZ
+  = \int_{\Omega}\!\left(\mu_{0}\,\frac{dp}{d\psi}
+  + \frac{1}{R^{2}}\,F\,\frac{dF}{d\psi}\right) v \,\, dR\,dZ .
+\end{equation}

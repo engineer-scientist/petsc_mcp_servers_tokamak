@@ -1,0 +1,9 @@
+{
+  "select_approach": {
+    "grid": "unstructured-grid",
+    "discretization": "finite-element"
+  },
+  "petsc_dm": "DMPLEX",
+  "problem_class": "nonlinear",
+  "petsc_solver": "SNES"
+}

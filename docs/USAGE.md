@@ -1,0 +1,89 @@
+# Usage — running the workflow end to end
+
+How to reproduce the agent-generated, verified tokamak Grad–Shafranov simulation.
+See `docs/ENVIRONMENT.md` for the machine setup and `docs/ARCHITECTURE.md` for what the
+agents are.
+
+## Prerequisites (already true on this node)
+
+- MCP-stack venv: `/home/sarthak.sharma/.venvs/mcp-test/bin/python`
+- Multi-agent system: `/home/sarthak.sharma/petsc_mcp_servers` (on branch
+  `tokamak-improvements`, which contains our portability/robustness fixes)
+- PETSc: `~/petsc` with `PETSC_ARCH=arch-linux-c-opt`
+- ANL Argo reachable (auto-configured by importing `petscmcp`)
+
+Convenience:
+
+```bash
+export MCP=/home/sarthak.sharma/petsc_mcp_servers
+export PYV=/home/sarthak.sharma/.venvs/mcp-test/bin/python
+export PY3=/usr/bin/python3            # has numpy + matplotlib for figures
+```
+
+## 1. Generate the simulation (the multi-agent pipeline)
+
+Drives Mathematical Modeling → Numerical Analysis → HPC Code Generation, saving every
+structured artifact under `artifacts/<run-id>/` with a `manifest.json` (provenance).
+
+```bash
+cd /home/sarthak.sharma/petsc_mcp_servers_tokamak
+env PYTHONPATH=$MCP $PYV src/orchestrate_tokamak.py --stages model,na,codegen
+```
+
+Options:
+- `--stages model,na,codegen` — subset/order of stages to run (default all).
+- `--resume run-YYYYmmdd-HHMMSS` — continue a run; completed stages are skipped
+  (a stage is "done" if its marker artifact exists, so a crash never re-spends an LLM call).
+- `--force` — re-run stages even if cached.
+
+Artifacts produced per run (`artifacts/<run-id>/`):
+`manifest.json` (provenance + per-stage status/timing), `model.{json,tex,html}`,
+`model_ufl.py`, `model_full.md`, `na.json`, `grad_shafranov.c` (the generated solver),
+`codegen.json`, `codegen_output.txt`. `artifacts/LATEST` names the most recent run.
+
+## 2. Verify + post-process
+
+Builds the generated solver, runs it on a grid ladder, measures the observed order of
+accuracy against the manufactured exact solution, and writes figures.
+
+```bash
+env PETSC_DIR=$HOME/petsc PETSC_ARCH=arch-linux-c-opt \
+    $PY3 src/verify_tokamak.py                 # uses artifacts/LATEST
+# or: ... src/verify_tokamak.py --run run-YYYYmmdd-HHMMSS --sizes 33 65 129 257
+```
+
+Outputs: `figures/gs_convergence.png`, `figures/gs_flux_surfaces.png`,
+`figures/gs_verification.json`, and `artifacts/<run>/verification.json`.
+Use `--show` once to print raw solver output if the error-parsing needs calibrating.
+
+## 3. Decision-gate metrics
+
+```bash
+$PY3 src/collect_metrics.py                     # uses artifacts/LATEST
+```
+
+Writes `artifacts/<run>/metrics.json` and `metrics.md` (correctness / efficiency /
+human-effort table for the poster and slides).
+
+## 4. (Optional) the built-in orchestrator agent
+
+A faithfulness demo of the shipped LLM orchestrator driving the same servers:
+
+```bash
+cd $MCP
+env PYTHONPATH=$MCP PETSC_MCP_SERVERS_STDIO=True $PYV -c \
+ "import asyncio, orchestrator_mcp_server as o; \
+  print(asyncio.run(o.orchestrate_async('the Grad-Shafranov equilibrium for a tokamak plasma')))"
+```
+
+(See `docs/SESSION_LOG.md` for status of this demo.)
+
+## Troubleshooting
+
+- *Inner agent says the only tool is "DesignSync" / cannot compile* → you are on an old
+  `petsc_mcp_servers` without the `getScriptPort` absolute-path fix; check out branch
+  `tokamak-improvements` or apply `patches/`.
+- *`ModuleNotFoundError: pde_modeling_mcp_server`* → set `PYTHONPATH=$MCP`.
+- *documentation/RAG server errors* → expected here (docs not built, no NVIDIA key); the
+  code generator runs compile-run-only by design.
+- *figures step: no numpy/matplotlib* → use `/usr/bin/python3`, not the mcp-test venv.

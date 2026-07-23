@@ -1,0 +1,40 @@
+{
+  "run": "run-20260723-113024",
+  "model": "claudeopus48",
+  "correctness": {
+    "model_name": "Grad-Shafranov equation",
+    "code_generated": true,
+    "code_lines": 267,
+    "compiled_and_ran": true,
+    "snes_converged_reason": "SNESConvergedReason   : CONVERGED_FNORM_RELATIVE",
+    "observed_order_maxnorm": [
+      2.0003556603194688,
+      2.000087560604805,
+      2.0000246273776328
+    ],
+    "finest_grid_maxnorm_error": 1.31806e-05,
+    "verification_sizes": [
+      33,
+      65,
+      129,
+      257
+    ]
+  },
+  "efficiency": {
+    "wallclock_seconds_total": 450.8,
+    "wallclock_by_stage": {
+      "model": 92.5,
+      "na": 65.5,
+      "codegen": 292.8
+    },
+    "codegen_response_loops": 21,
+    "codegen_tool_calls": 5,
+    "approx_llm_completions": 23
+  },
+  "human_effort": {
+    "solver_lines_handwritten": 0,
+    "solver_lines_agent_generated": 267,
+    "human_science_spec_chars": 377,
+    "human_codegen_spec_chars": 1721
+  }
+}

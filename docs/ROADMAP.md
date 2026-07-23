@@ -16,15 +16,16 @@ generation for PDE-based simulation science.
 | # | Milestone | Status |
 |---|---|---|
 | 0 | Understand system; verify agents run on this box; scaffold + docs | ✅ Session 1 |
-| 1 | Orchestration driver + artifact/provenance capture (`src/`) | ⬜ |
-| 2 | Agent-generated **Grad–Shafranov / Solov'ev** PETSc solver that **compiles & runs** | ⬜ |
-| 3 | **Verification**: manufactured-solution convergence (Solov'ev exact) + cross-check vs FreeGS | ⬜ |
-| 4 | **Visualization/Analysis agent** — flux surfaces, q-profile, diagnostics from the run | ⬜ |
+| 1 | Orchestration driver + artifact/provenance capture (`src/`) | ✅ Session 1 |
+| 2 | Agent-generated **Grad–Shafranov** PETSc solver that **compiles & runs** | ✅ Session 1 (DMDA+SNES, 1&4 ranks) |
+| 3 | **Verification**: manufactured-solution convergence | ✅ Session 1 (**p = 2.00**) |
+| 4 | Post-processing figures (convergence, flux surfaces) | ✅ Session 1 · q-profile + shaped ⬜ |
 | 5 | Demonstrate the built-in **orchestrator** agent end-to-end (where feasible) | ⬜ |
-| 6 | **Metrics** vs the proposal's decision gates (correctness, human-time, tokens/cost) | ⬜ |
-| 7 | **US-RSE 2026 poster** (abstract from template + poster) | ⬜ |
-| 8 | **Argonne intern presentation** (slides) | ⬜ |
-| 9 | Stretch: harder physics (nonlinear pressure profiles; time-dependent/resistive MHD) | ⬜ |
+| 6 | **Metrics** vs the proposal's decision gates (correctness, human-time, tokens/cost) | ✅ Session 1 (`metrics.md`) |
+| 7 | **US-RSE 2026 poster** — abstract ✅ (draft, docx) · poster PDF ⬜ | 🟡 |
+| 8 | **Argonne intern presentation** (slides) | 🟡 draft deck ✅ · restyle on ANL template ⬜ |
+| 9 | Real-machine shaping (Solov'ev/Cerfon–Freidberg D-shape + X-point, q-profile) | ⬜ |
+| 10 | Stretch: harder physics (nonlinear profiles; time-dependent/resistive MHD) | ⬜ |
 
 ## Physics ladder (agent-tractable → ambitious)
 

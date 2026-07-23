@@ -15,3 +15,6 @@ a.out
 
 # Keep artifacts/ text logs, but ignore any large binaries dropped there
 artifacts/**/*.bin
+
+# verification build outputs
+build/

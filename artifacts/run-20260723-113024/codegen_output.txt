@@ -1,0 +1,5 @@
+Grid Nx Nz            : 65 65
+Spacings hR hZ        : 0.03125 0.046875
+Max-norm error inf    : 0.000210906
+Discrete L2 error     : 0.00025865
+SNESConvergedReason   : CONVERGED_FNORM_RELATIVE

@@ -1,0 +1,54 @@
+{
+  "run_id": "run-20260723-113024",
+  "started": "2026-07-23T11:30:24.136011",
+  "host": "compute-386-08.cels.anl.gov",
+  "python": "3.12.3",
+  "model": "claudeopus48",
+  "anthropic_base_url": "https://apps.inside.anl.gov/argoapi",
+  "stages": {
+    "model": {
+      "status": "ok",
+      "at": "2026-07-23T11:31:56.661207",
+      "seconds": 92.5,
+      "name": "Grad-Shafranov equation",
+      "time_dependent": false,
+      "artifacts": [
+        "model.json",
+        "model.tex",
+        "model.html",
+        "model_ufl.py"
+      ]
+    },
+    "na": {
+      "status": "ok",
+      "at": "2026-07-23T11:33:02.213639",
+      "seconds": 65.5,
+      "grid": "unstructured-grid",
+      "discretization": "finite-element",
+      "petsc_dm": "DMPLEX",
+      "petsc_solver": "SNES",
+      "artifacts": [
+        "na.json"
+      ]
+    },
+    "codegen": {
+      "status": "ok",
+      "at": "2026-07-23T11:37:54.980955",
+      "seconds": 292.8,
+      "response_loops": 21,
+      "tool_cnt": 5,
+      "failure_message": null,
+      "artifacts": [
+        "grad_shafranov.c",
+        "codegen.json",
+        "codegen_output.txt"
+      ]
+    }
+  },
+  "mcp_servers_git": "3c5c411",
+  "project_git": "2f2a737",
+  "science_spec": "the Grad-Shafranov equilibrium for the magnetically confined plasma in a tokamak for nuclear fusion: the axisymmetric ideal-MHD force balance for the poloidal magnetic flux psi(R,Z) on a poloidal (R,Z) cross-section, Delta^* psi = -mu0 R^2 dp/dpsi - F dF/dpsi, with p(psi) the plasma pressure and F(psi)=R B_phi the poloidal current function, and a Dirichlet boundary psi=psi_b",
+  "codegen_spec": "solves the tokamak Grad-Shafranov equilibrium for the poloidal magnetic flux psi(R,Z) on a 2D structured rectangular domain in the (R,Z) poloidal plane, and verifies itself with the method of manufactured solutions. Discretize the Grad-Shafranov operator Delta^* psi = d2psi/dR2 - (1/R) dpsi/dR + d2psi/dZ2 on a PETSc DMDA (DM_BOUNDARY_NONE, 1 dof, stencil width 1) using standard 2nd-order central finite differences, and solve with SNES (the residual is linear so Newton converges in one step; assemble the true Jacobian). Domain: R in [Rmin,Rmax] = [1.0, 3.0], Z in [Zmin,Zmax] = [-1.5, 1.5]; grid size from DMDA runtime options -da_grid_x and -da_grid_y (default 65 x 65); include the boundary points in the grid so the spacings are hR=(Rmax-Rmin)/(Nx-1), hZ=(Zmax-Zmin)/(Nz-1). Use the MANUFACTURED exact solution psi_exact(R,Z) = sin(aR*(R-Rmin)) * sin(aZ*(Z-Zmin)) with aR = PETSC_PI/(Rmax-Rmin) and aZ = PETSC_PI/(Zmax-Zmin), which vanishes on all four edges (homogeneous Dirichlet). Its exact Grad-Shafranov operator is Delta^* psi_exact = ( -aR*aR*sin(aR*(R-Rmin)) - (aR/R)*cos(aR*(R-Rmin)) )*sin(aZ*(Z-Zmin)) + sin(aR*(R-Rmin))*( -aZ*aZ*sin(aZ*(Z-Zmin)) ). Set the right-hand side f(R,Z) = Delta^* psi_exact, impose the Dirichlet boundary condition psi = psi_exact (= 0) on all four edges, solve Delta^* psi = f, and compute the error against psi_exact. PRINT exactly these lines: the grid Nx Nz, the spacings hR hZ, the maximum-norm error ||psi_h - psi_exact||_inf, the discrete L2 error, and PETSc's SNESGetConvergedReason. Also support an option -psi_view to VecView the numerical solution. Make the code clean, use PetscCall() on every PETSc call, no %D formats, and be runnable on 1 or multiple MPI ranks.",
+  "last_run": "2026-07-23T11:30:24.161171",
+  "finished": "2026-07-23T11:37:54.985906"
+}
