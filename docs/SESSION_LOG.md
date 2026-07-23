@@ -51,6 +51,12 @@ simulation on this machine, scaffold the project, and plan the deliverables
 - **Metrics** (`src/collect_metrics.py`): 0 solver lines hand-written / 267 generated;
   ~23 LLM completions; ~451 s total wall-clock. See `artifacts/<run>/metrics.md`.
 
+**Transparency (added after review):** the driver now captures, per stage, the exact
+agent **input** (`*_input.txt`), the full raw **transcript** (`*_transcript.log` — including
+the code-gen ⇄ compile-run inter-agent tool calls), and a per-run **`DATAFLOW.md`** lineage
+map; `artifacts/README.md` documents the whole schema. The canonical run was backfilled
+with these. The store *is* the proposal's "accumulated structured artifacts".
+
 **Built this session:** `src/orchestrate_tokamak.py` (driver), `src/verify_tokamak.py`,
 `src/collect_metrics.py`, `slides/make_slides.py` → `slides/petsc_multiagent_tokamak.pptx`
 (10 slides), `poster/abstract.md` + `poster/USRSE26_abstract.docx`, docs (`ARCHITECTURE`,

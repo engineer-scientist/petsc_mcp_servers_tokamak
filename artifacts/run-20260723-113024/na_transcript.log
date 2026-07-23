@@ -1,0 +1,24 @@
+[na] Numerical Analysis agent: selecting grid/discretization/solver ...
+AssistantMessage from Claude: ```json
+{
+  "grid": "unstructured-grid",
+  "discretization": "finite-element"
+}
+```
+
+**Rationale:**
+
+- **grid → `unstructured-grid`**: The Grad–Shafranov equation is solved on a poloidal (R,Z) cross-section whose plasma boundary is typically curved and non-rectangular (D-shaped with X-points/separatrix). An unstructured grid conforms to this irregular Dirichlet boundary (ψ = ψ_b) far better than a Cartesian structured grid, avoiding stair-stepping of the domain shape.
+
+- **discretization → `finite-element`**: The operator Δ*ψ is a second-order elliptic operator, and the problem is a nonlinear elliptic BVP with a source depending on ψ (via dp/dψ and F dF/dψ). Finite elements naturally handle the variational (weak) form of elliptic operators on unstructured meshes, impose the Dirichlet condition cleanly, and pair well with a Newton/nonlinear solve for the ψ-dependent right-hand side.
+
+- **integrator → omitted**: The PDE is explicitly time-independent (steady MHD force balance), so no ODE integrator key is included.
+Located body of triple tick
+
+
+{
+  "grid": "unstructured-grid",
+  "discretization": "finite-element"
+}
+
+[na] OK  grid=unstructured-grid disc=finite-element -> DM=DMPLEX ; class=nonlinear -> solver=SNES  (66s)

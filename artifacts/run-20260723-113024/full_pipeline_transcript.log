@@ -1,0 +1,441 @@
+=== tokamak orchestration  run_id=run-20260723-113024 ===
+    artifacts -> /home/sarthak.sharma/petsc_mcp_servers_tokamak/artifacts/run-20260723-113024
+[model] Mathematical Modeling agent: generating PDE model ...
+AssistantMessage from Claude: # Grad–Shafranov Equilibrium — Mathematical Model
+
+**The name of the PDE is [Grad-Shafranov equation]** (the axisymmetric ideal-MHD equilibrium equation).
+
+**the PDE is not time-dependent** (it is a stationary/equilibrium force-balance problem).
+
+A note on the derivation: the Grad–Shafranov operator can be written in the self-adjoint divergence form
+$\Delta^*\psi = R^2\,\nabla\!\cdot\!\left(R^{-2}\nabla\psi\right)$. Dividing the strong form by $R^2$, multiplying by a test function $v$ (with $v=0$ on $\partial\Omega$), and integrating by parts yields the symmetric weak form below. Because $p(\psi)$ and $F(\psi)$ depend on $\psi$, the problem is generally nonlinear.
+
+---
+
+### 1) HTML page with MathJax
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Grad-Shafranov Equilibrium</title>
+  <script>
+    window.MathJax = {
+      tex: { inlineMath: [['\\(', '\\)']], displayMath: [['\\[', '\\]']] }
+    };
+  </script>
+  <script id="MathJax-script" async
+    src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+</head>
+<body>
+  <h1>Grad&ndash;Shafranov Equation (axisymmetric ideal-MHD equilibrium)</h1>
+
+  <p>Unknown: poloidal magnetic flux \(\psi(R,Z)\) on the poloidal cross-section
+  \(\Omega\subset\{(R,Z):R>0\}\), with \(\mu_0\) the vacuum permeability,
+  \(p(\psi)\) the plasma pressure and \(F(\psi)=R\,B_\phi\) the poloidal current
+  function. It is a stationary (time-independent) problem.</p>
+
+  <h2>Strong form</h2>
+  <p>Grad&ndash;Shafranov operator:</p>
+  \[
+    \Delta^{*}\psi \;\equiv\;
+    R\,\frac{\partial}{\partial R}\!\left(\frac{1}{R}\frac{\partial \psi}{\partial R}\right)
+    + \frac{\partial^{2}\psi}{\partial Z^{2}}
+    \;=\;
+    R^{2}\,\nabla\!\cdot\!\left(\frac{1}{R^{2}}\nabla\psi\right).
+  \]
+  <p>Equilibrium equation and Dirichlet boundary condition:</p>
+  \[
+    \Delta^{*}\psi \;=\; -\,\mu_{0}\,R^{2}\,\frac{dp}{d\psi}
+                       \;-\; F\,\frac{dF}{d\psi}
+    \qquad \text{in } \Omega,
+  \]
+  \[
+    \psi \;=\; \psi_{b} \qquad \text{on } \partial\Omega .
+  \]
+
+  <h2>Weak form</h2>
+  <p>Find \(\psi\in H^{1}(\Omega)\) with \(\psi=\psi_{b}\) on \(\partial\Omega\)
+  such that for all test functions \(v\in H^{1}_{0}(\Omega)\):</p>
+  \[
+    \int_{\Omega} \frac{1}{R^{2}}\,\nabla\psi\cdot\nabla v \; dR\,dZ
+    \;=\;
+    \int_{\Omega} \left(\mu_{0}\,\frac{dp}{d\psi}
+      + \frac{1}{R^{2}}\,F\,\frac{dF}{d\psi}\right) v \; dR\,dZ ,
+  \]
+  <p>obtained by dividing the strong form by \(R^{2}\), multiplying by \(v\),
+  integrating over \(\Omega\), and integrating by parts (the boundary term
+  vanishes since \(v=0\) on \(\partial\Omega\)).</p>
+</body>
+</html>
+```
+
+---
+
+### 2) LaTeX (no document/section wrapper)
+
+```latex
+% ---- Grad-Shafranov equilibrium: strong and weak forms ----
+% Unknown: poloidal flux psi(R,Z) on poloidal cross-section Omega, R > 0.
+% mu0: vacuum permeability, p(psi): pressure, F(psi)=R B_phi: current function.
+
+% Grad-Shafranov (self-adjoint) operator:
+\begin{equation*}
+  \Delta^{*}\psi \;\equiv\;
+  R\,\frac{\partial}{\partial R}\!\left(\frac{1}{R}\frac{\partial \psi}{\partial R}\right)
+  + \frac{\partial^{2}\psi}{\partial Z^{2}}
+  \;=\; R^{2}\,\nabla\!\cdot\!\left(\frac{1}{R^{2}}\nabla\psi\right).
+\end{equation*}
+
+% Strong form + Dirichlet boundary condition:
+\begin{align*}
+  \Delta^{*}\psi
+    &= -\,\mu_{0}\,R^{2}\,\frac{dp}{d\psi}
+       \;-\; F\,\frac{dF}{d\psi}
+       && \text{in } \Omega, \\
+  \psi &= \psi_{b}
+       && \text{on } \partial\Omega .
+\end{align*}
+
+% Weak form:
+% Find psi in H^1(Omega) with psi = psi_b on the boundary such that
+% for all v in H^1_0(Omega):
+\begin{equation*}
+  \int_{\Omega} \frac{1}{R^{2}}\,\nabla\psi\cdot\nabla v \; dR\,dZ
+  \;=\;
+  \int_{\Omega} \left(\mu_{0}\,\frac{dp}{d\psi}
+      + \frac{1}{R^{2}}\,F\,\frac{dF}{d\psi}\right) v \; dR\,dZ .
+\end{equation*}
+```
+
+---
+
+### 3) UFL (FEniCS)
+
+```python
+# Grad-Shafranov equilibrium in UFL (FEniCS / FEniCSx).
+# Stationary (time-independent), nonlinear residual form.
+#
+# Strong form:   Delta* psi = -mu0 R^2 dp/dpsi - F dF/dpsi  in Omega
+#                psi = psi_b                                 on boundary
+# with Delta* psi = R^2 div( (1/R^2) grad psi ).
+#
+# Dividing by R^2 and integrating by parts (v = 0 on the Dirichlet
+# boundary) gives the symmetric weak form implemented below.
+
+from ufl import (Coefficient, TestFunction, TrialFunction,
+                 SpatialCoordinate, grad, dot, dx, Constant)
+
+# --- Assume a 2D poloidal (R,Z) mesh and a scalar space V are defined ---
+# mesh = ...            # 2D mesh of the poloidal cross-section Omega
+# V    = ...            # e.g. FunctionSpace(mesh, "Lagrange", 1)
+
+psi = Coefficient(V)     # unknown poloidal flux psi(R,Z)  (nonlinear solve)
+v   = TestFunction(V)    # test function, v = 0 on Dirichlet boundary
+dpsi = TrialFunction(V)  # increment for the Jacobian (Newton)
+
+x = SpatialCoordinate(mesh)
+R = x[0]                 # major-radius coordinate  (R > 0)
+# Z = x[1]               # vertical coordinate
+
+mu0 = Constant(mesh)     # vacuum permeability  (assign 4*pi*1e-7)
+
+# Profile source terms; these are functions of psi (make the problem
+# nonlinear). Replace by the chosen equilibrium profiles p(psi), F(psi):
+#   p_prime  = dp/dpsi    evaluated at psi
+#   FFprime  = F dF/dpsi  evaluated at psi
+p_prime = Coefficient(V)   # placeholder for dp/dpsi(psi)
+FFprime = Coefficient(V)   # placeholder for F dF/dpsi(psi)
+
+# Weak (residual) form  R(psi; v) = 0:
+#   find psi with psi = psi_b on the boundary such that for all v:
+F_res = ( (1.0 / R**2) * dot(grad(psi), grad(v)) * dx
+          - ( mu0 * p_prime + (1.0 / R**2) * FFprime ) * v * dx )
+
+# Jacobian (Gateaux derivative) for a Newton solver:
+from ufl import derivative
+J = derivative(F_res, psi, dpsi)
+
+# The Dirichlet condition psi = psi_b on partial-Omega is imposed as an
+# essential BC on V when assembling/solving (not part of the UFL form).
+```
+Found the PDE name Grad-Shafranov equation
+Located body of triple tick
+
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Grad-Shafranov Equilibrium</title>
+  <script>
+    window.MathJax = {
+      tex: { inlineMath: [['\\(', '\\)']], displayMath: [['\\[', '\\]']] }
+    };
+  </script>
+  <script id="MathJax-script" async
+    src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+</head>
+<body>
+  <h1>Grad&ndash;Shafranov Equation (axisymmetric ideal-MHD equilibrium)</h1>
+
+  <p>Unknown: poloidal magnetic flux \(\psi(R,Z)\) on the poloidal cross-section
+  \(\Omega\subset\{(R,Z):R>0\}\), with \(\mu_0\) the vacuum permeability,
+  \(p(\psi)\) the plasma pressure and \(F(\psi)=R\,B_\phi\) the poloidal current
+  function. It is a stationary (time-independent) problem.</p>
+
+  <h2>Strong form</h2>
+  <p>Grad&ndash;Shafranov operator:</p>
+  \[
+    \Delta^{*}\psi \;\equiv\;
+    R\,\frac{\partial}{\partial R}\!\left(\frac{1}{R}\frac{\partial \psi}{\partial R}\right)
+    + \frac{\partial^{2}\psi}{\partial Z^{2}}
+    \;=\;
+    R^{2}\,\nabla\!\cdot\!\left(\frac{1}{R^{2}}\nabla\psi\right).
+  \]
+  <p>Equilibrium equation and Dirichlet boundary condition:</p>
+  \[
+    \Delta^{*}\psi \;=\; -\,\mu_{0}\,R^{2}\,\frac{dp}{d\psi}
+                       \;-\; F\,\frac{dF}{d\psi}
+    \qquad \text{in } \Omega,
+  \]
+  \[
+    \psi \;=\; \psi_{b} \qquad \text{on } \partial\Omega .
+  \]
+
+  <h2>Weak form</h2>
+  <p>Find \(\psi\in H^{1}(\Omega)\) with \(\psi=\psi_{b}\) on \(\partial\Omega\)
+  such that for all test functions \(v\in H^{1}_{0}(\Omega)\):</p>
+  \[
+    \int_{\Omega} \frac{1}{R^{2}}\,\nabla\psi\cdot\nabla v \; dR\,dZ
+    \;=\;
+    \int_{\Omega} \left(\mu_{0}\,\frac{dp}{d\psi}
+      + \frac{1}{R^{2}}\,F\,\frac{dF}{d\psi}\right) v \; dR\,dZ ,
+  \]
+  <p>obtained by dividing the strong form by \(R^{2}\), multiplying by \(v\),
+  integrating over \(\Omega\), and integrating by parts (the boundary term
+  vanishes since \(v=0\) on \(\partial\Omega\)).</p>
+</body>
+</html>
+
+Located body of triple tick
+
+
+% ---- Grad-Shafranov equilibrium: strong and weak forms ----
+% Unknown: poloidal flux psi(R,Z) on poloidal cross-section Omega, R > 0.
+% mu0: vacuum permeability, p(psi): pressure, F(psi)=R B_phi: current function.
+
+% Grad-Shafranov (self-adjoint) operator:
+\begin{equation*}
+  \Delta^{*}\psi \;\equiv\;
+  R\,\frac{\partial}{\partial R}\!\left(\frac{1}{R}\frac{\partial \psi}{\partial R}\right)
+  + \frac{\partial^{2}\psi}{\partial Z^{2}}
+  \;=\; R^{2}\,\nabla\!\cdot\!\left(\frac{1}{R^{2}}\nabla\psi\right).
+\end{equation*}
+
+% Strong form + Dirichlet boundary condition:
+\begin{align*}
+  \Delta^{*}\psi
+    &= -\,\mu_{0}\,R^{2}\,\frac{dp}{d\psi}
+       \;-\; F\,\frac{dF}{d\psi}
+       && \text{in } \Omega, \\
+  \psi &= \psi_{b}
+       && \text{on } \partial\Omega .
+\end{align*}
+
+% Weak form:
+% Find psi in H^1(Omega) with psi = psi_b on the boundary such that
+% for all v in H^1_0(Omega):
+\begin{equation*}
+  \int_{\Omega} \frac{1}{R^{2}}\,\nabla\psi\cdot\nabla v \; dR\,dZ
+  \;=\;
+  \int_{\Omega} \left(\mu_{0}\,\frac{dp}{d\psi}
+      + \frac{1}{R^{2}}\,F\,\frac{dF}{d\psi}\right) v \; dR\,dZ .
+\end{equation*}
+
+Located body of triple tick
+
+
+# Grad-Shafranov equilibrium in UFL (FEniCS / FEniCSx).
+# Stationary (time-independent), nonlinear residual form.
+#
+# Strong form:   Delta* psi = -mu0 R^2 dp/dpsi - F dF/dpsi  in Omega
+#                psi = psi_b                                 on boundary
+# with Delta* psi = R^2 div( (1/R^2) grad psi ).
+#
+# Dividing by R^2 and integrating by parts (v = 0 on the Dirichlet
+# boundary) gives the symmetric weak form implemented below.
+
+from ufl import (Coefficient, TestFunction, TrialFunction,
+                 SpatialCoordinate, grad, dot, dx, Constant)
+
+# --- Assume a 2D poloidal (R,Z) mesh and a scalar space V are defined ---
+# mesh = ...            # 2D mesh of the poloidal cross-section Omega
+# V    = ...            # e.g. FunctionSpace(mesh, "Lagrange", 1)
+
+psi = Coefficient(V)     # unknown poloidal flux psi(R,Z)  (nonlinear solve)
+v   = TestFunction(V)    # test function, v = 0 on Dirichlet boundary
+dpsi = TrialFunction(V)  # increment for the Jacobian (Newton)
+
+x = SpatialCoordinate(mesh)
+R = x[0]                 # major-radius coordinate  (R > 0)
+# Z = x[1]               # vertical coordinate
+
+mu0 = Constant(mesh)     # vacuum permeability  (assign 4*pi*1e-7)
+
+# Profile source terms; these are functions of psi (make the problem
+# nonlinear). Replace by the chosen equilibrium profiles p(psi), F(psi):
+#   p_prime  = dp/dpsi    evaluated at psi
+#   FFprime  = F dF/dpsi  evaluated at psi
+p_prime = Coefficient(V)   # placeholder for dp/dpsi(psi)
+FFprime = Coefficient(V)   # placeholder for F dF/dpsi(psi)
+
+# Weak (residual) form  R(psi; v) = 0:
+#   find psi with psi = psi_b on the boundary such that for all v:
+F_res = ( (1.0 / R**2) * dot(grad(psi), grad(v)) * dx
+          - ( mu0 * p_prime + (1.0 / R**2) * FFprime ) * v * dx )
+
+# Jacobian (Gateaux derivative) for a Newton solver:
+from ufl import derivative
+J = derivative(F_res, psi, dpsi)
+
+# The Dirichlet condition psi = psi_b on partial-Omega is imposed as an
+# essential BC on V when assembling/solving (not part of the UFL form).
+
+[model] OK  name='Grad-Shafranov equation'  time-dependent=False  (92s)
+[na] Numerical Analysis agent: selecting grid/discretization/solver ...
+AssistantMessage from Claude: ```json
+{
+  "grid": "unstructured-grid",
+  "discretization": "finite-element"
+}
+```
+
+**Rationale:**
+
+- **grid → `unstructured-grid`**: The Grad–Shafranov equation is solved on a poloidal (R,Z) cross-section whose plasma boundary is typically curved and non-rectangular (D-shaped with X-points/separatrix). An unstructured grid conforms to this irregular Dirichlet boundary (ψ = ψ_b) far better than a Cartesian structured grid, avoiding stair-stepping of the domain shape.
+
+- **discretization → `finite-element`**: The operator Δ*ψ is a second-order elliptic operator, and the problem is a nonlinear elliptic BVP with a source depending on ψ (via dp/dψ and F dF/dψ). Finite elements naturally handle the variational (weak) form of elliptic operators on unstructured meshes, impose the Dirichlet condition cleanly, and pair well with a Newton/nonlinear solve for the ψ-dependent right-hand side.
+
+- **integrator → omitted**: The PDE is explicitly time-independent (steady MHD force balance), so no ODE integrator key is included.
+Located body of triple tick
+
+
+{
+  "grid": "unstructured-grid",
+  "discretization": "finite-element"
+}
+
+[na] OK  grid=unstructured-grid disc=finite-element -> DM=DMPLEX ; class=nonlinear -> solver=SNES  (66s)
+[codegen] HPC Code Generation agent: generating + compiling PETSc C ...
+[codegen] (this drives an inner Claude with the compile-run tool; can take minutes)
+compile_run server will be used {'command': '/home/sarthak.sharma/.venvs/mcp-test/bin/python', 'args': ['/home/sarthak.sharma/petsc_mcp_servers/petsc_compile_run_mcp_server.py', '--stdio']}
+Code generator using sub-servers: ['PETSc compiler-run']
+Ignoring --allowedTools rule "mcp__PETSc*": Wildcard tool name "mcp__PETSc*" is not supported in allow rules. An allow pattern must name the scope it widens — globs are permitted only in the tool position after a literal mcp__<server>__ prefix. Deny and ask rules accept wildcards anywhere.
+Message from Claude: I'll first verify I have access to the PETSc compile-run MCP server.
+Extracted json triple-tick block
+Exception trying to locate JSON body
+
+Running tool WaitForMcpServers({})
+
+Raw result of running tool: ToolResultBlock(tool_use_id='toolu_vrtx_01UVmowQMwDGCSs747abQEWc', content='ready: true', is_error=False)
+Unable to convert claude_agent_sdk.ToolResultBlock to JSON
+ready: true
+
+Message from Claude: I have access to the PETSc compile-run MCP server. Let me verify with a quick check.
+Extracted json triple-tick block
+Exception trying to locate JSON body
+
+Running tool mcp__PETSc_compiler-run__ls({})
+
+Raw result of running tool: ToolResultBlock(tool_use_id='toolu_vrtx_01NXkkSuPZX2i4TQA6vWySyc', content='{"stdout":"adv1d.c\\nadvection\\nadvection1d\\nadvection1d.c\\nadvection1d_ssp\\nadvection1d_ssp.c\\nadvection.c\\nex_advection\\nex_advection.c\\ngradshafranov\\ngradshafranov.c\\nhello\\nhello.c\\nmakefile\\nmcp_bad.c\\nmcp_smoke\\nmcp_smoke.c\\nmytest\\nmytest.c\\nnumsquares\\nnumsquares.c\\nsquares\\nsquares.c\\n","stderr":"","returncode":0}', is_error=None)
+
+Result of running tool (stdout): adv1d.c
+advection
+advection1d
+advection1d.c
+advection1d_ssp
+advection1d_ssp.c
+advection.c
+ex_advection
+ex_advection.c
+gradshafranov
+gradshafranov.c
+hello
+hello.c
+makefile
+mcp_bad.c
+mcp_smoke
+mcp_smoke.c
+mytest
+mytest.c
+numsquares
+numsquares.c
+squares
+squares.c
+
+
+Message from Claude: The MCP server is available and working. Now let me write the Grad-Shafranov solver code.
+Extracted json triple-tick block
+Exception trying to locate JSON body
+
+Running tool mcp__PETSc_compiler-run__create_file_from_string({'filename': 'gs_mms.c', 'file_contents': 'static char help[] =\n  "Solve the tokamak Grad-Shafranov equilibrium for the poloidal flux psi(R,Z)\\n"\n  "on a 2D structured rectangular (R,Z) domain, verified via the method of\\n"\n  "manufactured solutions.\\n\\n"\n  "Operator: Delta^* psi = d2psi/dR2 - (1/R) dpsi/dR + d2psi/dZ2\\n"\n  "Discretized with 2nd-order central finite differences on a PETSc DMDA and\\n"\n  "solved with SNES (linear residual, true Jacobian, converges in one Newton\\n"\n  "step).\\n\\n"\n  "Options:\\n"\n  "  -da_grid_x <Nx>  number of grid points in R (default 65)\\n"\n  "  -da_grid_y <Nz>  number of grid points in Z (default 65)\\n"\n  "  -psi_view        VecView the numerical solution\\n\\n";\n\n#include <petscsnes.h>\n#include <petscdmda.h>\n\n/* Problem geometry and manufactured-solution parameters, shared by the\n   residual and Jacobian callbacks. */\ntypedef struct {\n  PetscReal Rmin, Rmax;   /* R in [Rmin, Rmax]            */\n  PetscReal Zmin, Zmax;   /* Z in [Zmin, Zmax]            */\n  PetscReal aR, aZ;       /* manufactured wavenumbers     */\n} AppCtx;\n\n/* Manufactured exact solution: psi_exact(R,Z) = sin(aR (R-Rmin)) sin(aZ (Z-Zmin)).\n   Vanishes on all four edges (homogeneous Dirichlet). */\nstatic inline PetscReal PsiExact(AppCtx *u, PetscReal R, PetscReal Z)\n{\n  return PetscSinReal(u->aR * (R - u->Rmin)) * PetscSinReal(u->aZ * (Z - u->Zmin));\n}\n\n/* Exact Grad-Shafranov operator applied to psi_exact:\n   Delta^* psi_exact =\n     ( -aR^2 sin(aR(R-Rmin)) - (aR/R) cos(aR(R-Rmin)) ) sin(aZ(Z-Zmin))\n     + sin(aR(R-Rmin)) ( -aZ^2 sin(aZ(Z-Zmin)) ).\n   This is the manufactured right-hand side f(R,Z). */\nstatic inline PetscReal ForcingF(AppCtx *u, PetscReal R, PetscReal Z)\n{\n  PetscReal sR = PetscSinReal(u->aR * (R - u->Rmin));\n  PetscReal cR = PetscCosReal(u->aR * (R - u->Rmin));\n  PetscReal sZ = PetscSinReal(u->aZ * (Z - u->Zmin));\n\n  return (-u->aR * u->aR * sR - (u->aR / R) * cR) * sZ + sR * (-u->aZ * u->aZ * sZ);\n}\n\n/* Residual F(psi) = Delta^*_h psi - f, with Dirichlet rows F = psi - psi_exact. */\nstatic PetscErrorCode FormFunction(SNES snes, Vec X, Vec Fvec, void *ctx)\n{\n  AppCtx        *user = (AppCtx *)ctx;\n  DM             da;\n  DMDALocalInfo  info;\n  PetscReal      hR, hZ, R, Z;\n  PetscScalar  **x, **f;\n  Vec            Xloc;\n\n  PetscFunctionBeginUser;\n  PetscCall(SNESGetDM(snes, &da));\n  PetscCall(DMDAGetLocalInfo(da, &info));\n\n  hR = (user->Rmax - user->Rmin) / (PetscReal)(info.mx - 1);\n  hZ = (user->Zmax - user->Zmin) / (PetscReal)(info.my - 1);\n\n  /* Bring in ghost values for the current iterate. */\n  PetscCall(DMGetLocalVector(da, &Xloc));\n  PetscCall(DMGlobalToLocalBegin(da, X, INSERT_VALUES, Xloc));\n  PetscCall(DMGlobalToLocalEnd(da, X, INSERT_VALUES, Xloc));\n\n  PetscCall(DMDAVecGetArrayRead(da, Xloc, &x));\n  PetscCall(DMDAVecGetArray(da, Fvec, &f));\n\n  for (PetscInt j = info.ys; j < info.ys + info.ym; j++) {\n    Z = user->Zmin + j * hZ;\n    for (PetscInt i = info.xs; i < info.xs + info.xm; i++) {\n      R = user->Rmin + i * hR;\n      if (i == 0 || i == info.mx - 1 || j == 0 || j == info.my - 1) {\n        /* Dirichlet boundary: psi = psi_exact (= 0 on all edges). */\n        f[j][i] = x[j][i] - PsiExact(user, R, Z);\n      } else {\n        /* Delta^*_h psi = (psi_E - 2 psi_P + psi_W)/hR^2\n                           - (1/R)(psi_E - psi_W)/(2 hR)\n                           + (psi_N - 2 psi_P + psi_S)/hZ^2 */\n        PetscScalar dRR = (x[j][i + 1] - 2.0 * x[j][i] + x[j][i - 1]) / (hR * hR);\n        PetscScalar dR  = (x[j][i + 1] - x[j][i - 1]) / (2.0 * hR);\n        PetscScalar dZZ = (x[j + 1][i] - 2.0 * x[j][i] + x[j - 1][i]) / (hZ * hZ);\n        f[j][i] = dRR - dR / R + dZZ - ForcingF(user, R, Z);\n      }\n    }\n  }\n\n  PetscCall(DMDAVecRestoreArrayRead(da, Xloc, &x));\n  PetscCall(DMDAVecRestoreArray(da, Fvec, &f));\n  PetscCall(DMRestoreLocalVector(da, &Xloc));\n  PetscFunctionReturn(PETSC_SUCCESS);\n}\n\n/* True Jacobian of the (linear) residual. */\nstatic PetscErrorCode FormJacobian(SNES snes, Vec X, Mat J, Mat Jpre, void *ctx)\n{\n  AppCtx        *user = (AppCtx *)ctx;\n  DM             da;\n  DMDALocalInfo  info;\n  PetscReal      hR, hZ, R;\n\n  PetscFunctionBeginUser;\n  PetscCall(SNESGetDM(snes, &da));\n  PetscCall(DMDAGetLocalInfo(da, &info));\n\n  hR = (user->Rmax - user->Rmin) / (PetscReal)(info.mx - 1);\n  hZ = (user->Zmax - user->Zmin) / (PetscReal)(info.my - 1);\n\n  for (PetscInt j = info.ys; j < info.ys + info.ym; j++) {\n    for (PetscInt i = info.xs; i < info.xs + info.xm; i++) {\n      MatStencil  row = {0}, col[5] = {{0}};\n      PetscScalar v[5];\n      PetscInt    n = 0;\n\n      row.i = i;\n      row.j = j;\n\n      if (i == 0 || i == info.mx - 1 || j == 0 || j == info.my - 1) {\n        /* Dirichlet row: identity. */\n        col[0].i = i;\n        col[0].j = j;\n        v[0]     = 1.0;\n        n        = 1;\n      } else {\n        R = user->Rmin + i * hR;\n\n        /* South (j-1) */\n        col[n].i = i;\n        col[n].j = j - 1;\n        v[n]     = 1.0 / (hZ * hZ);\n        n++;\n        /* West (i-1) */\n        col[n].i = i - 1;\n        col[n].j = j;\n        v[n]     = 1.0 / (hR * hR) + 1.0 / (2.0 * hR * R);\n        n++;\n        /* Center */\n        col[n].i = i;\n        col[n].j = j;\n        v[n]     = -2.0 / (hR * hR) - 2.0 / (hZ * hZ);\n        n++;\n        /* East (i+1) */\n        col[n].i = i + 1;\n        col[n].j = j;\n        v[n]     = 1.0 / (hR * hR) - 1.0 / (2.0 * hR * R);\n        n++;\n        /* North (j+1) */\n        col[n].i = i;\n        col[n].j = j + 1;\n        v[n]     = 1.0 / (hZ * hZ);\n        n++;\n      }\n      PetscCall(MatSetValuesStencil(Jpre, 1, &row, n, col, v, INSERT_VALUES));\n    }\n  }\n\n  PetscCall(MatAssemblyBegin(Jpre, MAT_FINAL_ASSEMBLY));\n  PetscCall(MatAssemblyEnd(Jpre, MAT_FINAL_ASSEMBLY));\n  if (J != Jpre) {\n    PetscCall(MatAssemblyBegin(J, MAT_FINAL_ASSEMBLY));\n    PetscCall(MatAssemblyEnd(J, MAT_FINAL_ASSEMBLY));\n  }\n  PetscFunctionReturn(PETSC_SUCCESS);\n}\n\nint main(int argc, char **argv)\n{\n  AppCtx             user;\n  DM                 da;\n  SNES               snes;\n  Vec                x, r, xexact;\n  Mat                J;\n  DMDALocalInfo      info;\n  PetscReal          hR, hZ, errinf, errl2;\n  SNESConvergedReason reason;\n\n  PetscFunctionBeginUser;\n  PetscCall(PetscInitialize(&argc, &argv, NULL, help));\n\n  /* Geometry and manufactured-solution parameters. */\n  user.Rmin = 1.0;\n  user.Rmax = 3.0;\n  user.Zmin = -1.5;\n  user.Zmax = 1.5;\n  user.aR   = PETSC_PI / (user.Rmax - user.Rmin);\n  user.aZ   = PETSC_PI / (user.Zmax - user.Zmin);\n\n  /* Structured grid; default 65 x 65, override with -da_grid_x / -da_grid_y.\n     Include the boundary points so hR=(Rmax-Rmin)/(Nx-1), hZ=(Zmax-Zmin)/(Nz-1). */\n  PetscCall(DMDACreate2d(PETSC_COMM_WORLD, DM_BOUNDARY_NONE, DM_BOUNDARY_NONE,\n                         DMDA_STENCIL_STAR, 65, 65, PETSC_DECIDE, PETSC_DECIDE,\n                         1, 1, NULL, NULL, &da));\n  PetscCall(DMSetFromOptions(da));\n  PetscCall(DMSetUp(da));\n  PetscCall(DMDASetUniformCoordinates(da, user.Rmin, user.Rmax, user.Zmin, user.Zmax, 0.0, 0.0));\n\n  PetscCall(DMDAGetLocalInfo(da, &info));\n  hR = (user.Rmax - user.Rmin) / (PetscReal)(info.mx - 1);\n  hZ = (user.Zmax - user.Zmin) / (PetscReal)(info.my - 1);\n\n  PetscCall(DMCreateGlobalVector(da, &x));\n  PetscCall(VecDuplicate(x, &r));\n  PetscCall(VecDuplicate(x, &xexact));\n  PetscCall(DMCreateMatrix(da, &J));\n\n  PetscCall(SNESCreate(PETSC_COMM_WORLD, &snes));\n  PetscCall(SNESSetDM(snes, da));\n  PetscCall(SNESSetFunction(snes, r, FormFunction, &user));\n  PetscCall(SNESSetJacobian(snes, J, J, FormJacobian, &user));\n  PetscCall(SNESSetFromOptions(snes));\n\n  /* Solve Delta^* psi = f starting from zero. */\n  PetscCall(VecSet(x, 0.0));\n  PetscCall(SNESSolve(snes, NULL, x));\n  PetscCall(SNESGetConvergedReason(snes, &reason));\n\n  /* Build the exact solution on the grid. */\n  {\n    PetscScalar **xe;\n    PetscCall(DMDAVecGetArray(da, xexact, &xe));\n    for (PetscInt j = info.ys; j < info.ys + info.ym; j++) {\n      PetscReal Z = user.Zmin + j * hZ;\n      for (PetscInt i = info.xs; i < info.xs + info.xm; i++) {\n        PetscReal R = user.Rmin + i * hR;\n        xe[j][i] = PsiExact(&user, R, Z);\n      }\n    }\n    PetscCall(DMDAVecRestoreArray(da, xexact, &xe));\n  }\n\n  /* Errors: max-norm and discrete L2 (h-weighted). */\n  {\n    Vec e;\n    PetscReal nrm2;\n    PetscCall(VecDuplicate(x, &e));\n    PetscCall(VecWAXPY(e, -1.0, xexact, x)); /* e = x - xexact */\n    PetscCall(VecNorm(e, NORM_INFINITY, &errinf));\n    PetscCall(VecNorm(e, NORM_2, &nrm2));\n    errl2 = nrm2 * PetscSqrtReal(hR * hZ);\n    PetscCall(VecDestroy(&e));\n  }\n\n  /* Required output. */\n  PetscCall(PetscPrintf(PETSC_COMM_WORLD, "Grid Nx Nz            : %" PetscInt_FMT " %" PetscInt_FMT "\\n", info.mx, info.my));\n  PetscCall(PetscPrintf(PETSC_COMM_WORLD, "Spacings hR hZ        : %g %g\\n", (double)hR, (double)hZ));\n  PetscCall(PetscPrintf(PETSC_COMM_WORLD, "Max-norm error inf    : %g\\n", (double)errinf));\n  PetscCall(PetscPrintf(PETSC_COMM_WORLD, "Discrete L2 error     : %g\\n", (double)errl2));\n  PetscCall(PetscPrintf(PETSC_COMM_WORLD, "SNESConvergedReason   : %s\\n", SNESConvergedReasons[reason]));\n\n  /* Optional: view the numerical solution. */\n  {\n    PetscBool view = PETSC_FALSE;\n    PetscCall(PetscOptionsGetBool(NULL, NULL, "-psi_view", &view, NULL));\n    if (view) PetscCall(VecView(x, PETSC_VIEWER_STDOUT_WORLD));\n  }\n\n  PetscCall(MatDestroy(&J));\n  PetscCall(VecDestroy(&x));\n  PetscCall(VecDestroy(&r));\n  PetscCall(VecDestroy(&xexact));\n  PetscCall(SNESDestroy(&snes));\n  PetscCall(DMDestroy(&da));\n  PetscCall(PetscFinalize());\n  return 0;\n}\n'})
+
+Raw result of running tool: ToolResultBlock(tool_use_id='toolu_vrtx_01UsGaaQXFQnkS2wqEU1mceQ', content='{"result":true}', is_error=None)
+
+Result of running tool: True
+
+Message from Claude: Now let me compile it.
+Extracted json triple-tick block
+Exception trying to locate JSON body
+
+Running tool mcp__PETSc_compiler-run__make({'executable': 'gs_mms'})
+
+Raw result of running tool: ToolResultBlock(tool_use_id='toolu_vrtx_01K2pBwC4vEvLTrbMJ7u8y8z', content='{"stdout":"/home/sarthak.sharma/petsc/arch-linux-c-opt/bin/mpicc -Wall -Wwrite-strings -Wno-unknown-pragmas -Wno-lto-type-mismatch -Wno-stringop-overflow -fstack-protector -fvisibility=hidden -O3 -march=native  -I/home/sarthak.sharma/petsc/include -I/home/sarthak.sharma/petsc/arch-linux-c-opt/include     -Wl,-export-dynamic gs_mms.c   -Wl,-rpath,/home/sarthak.sharma/petsc/arch-linux-c-opt/lib -L/home/sarthak.sharma/petsc/arch-linux-c-opt/lib -Wl,-rpath,/usr/lib/gcc/x86_64-linux-gnu/13 -L/usr/lib/gcc/x86_64-linux-gnu/13 -lpetsc -lsuperlu_dist -llapack -lblas -lparmetis -lmetis -ltriangle -lm -lX11 -lmpifort -lmpi -lgfortran -lm -lgfortran -lm -lgcc_s -lquadmath -lstdc++  -o gs_mms\\n","stderr":"","returncode":0}', is_error=None)
+
+Result of running tool (stdout): /home/sarthak.sharma/petsc/arch-linux-c-opt/bin/mpicc -Wall -Wwrite-strings -Wno-unknown-pragmas -Wno-lto-type-mismatch -Wno-stringop-overflow -fstack-protector -fvisibility=hidden -O3 -march=native  -I/home/sarthak.sharma/petsc/include -I/home/sarthak.sharma/petsc/arch-linux-c-opt/include     -Wl,-export-dynamic gs_mms.c   -Wl,-rpath,/home/sarthak.sharma/petsc/arch-linux-c-opt/lib -L/home/sarthak.sharma/petsc/arch-linux-c-opt/lib -Wl,-rpath,/usr/lib/gcc/x86_64-linux-gnu/13 -L/usr/lib/gcc/x86_64-linux-gnu/13 -lpetsc -lsuperlu_dist -llapack -lblas -lparmetis -lmetis -ltriangle -lm -lX11 -lmpifort -lmpi -lgfortran -lm -lgfortran -lm -lgcc_s -lquadmath -lstdc++  -o gs_mms
+
+
+Message from Claude: Compiled cleanly. Now let me run it.
+Extracted json triple-tick block
+Exception trying to locate JSON body
+
+Running tool mcp__PETSc_compiler-run__run_executable({'executable': 'gs_mms'})
+
+Raw result of running tool: ToolResultBlock(tool_use_id='toolu_vrtx_0199gqqw9XMMZTjFRsZdvGaP', content='{"stdout":"Grid Nx Nz            : 65 65\\nSpacings hR hZ        : 0.03125 0.046875\\nMax-norm error inf    : 0.000210906\\nDiscrete L2 error     : 0.00025865\\nSNESConvergedReason   : CONVERGED_FNORM_RELATIVE\\n","stderr":"","returncode":0}', is_error=None)
+
+Result of running tool (stdout): Grid Nx Nz            : 65 65
+Spacings hR hZ        : 0.03125 0.046875
+Max-norm error inf    : 0.000210906
+Discrete L2 error     : 0.00025865
+SNESConvergedReason   : CONVERGED_FNORM_RELATIVE
+
+
+Message from Claude: The code compiled and ran successfully on the first attempt. As instructed, I'll stop immediately and return the code and output.
+
+```json
+{
+  "code": "static char help[] =\n  \"Solve the tokamak Grad-Shafranov equilibrium for the poloidal flux psi(R,Z)\\n\"\n  \"on a 2D structured rectangular (R,Z) domain, verified via the method of\\n\"\n  \"manufactured solutions.\\n\\n\"\n  \"Operator: Delta^* psi = d2psi/dR2 - (1/R) dpsi/dR + d2psi/dZ2\\n\"\n  \"Discretized with 2nd-order central finite differences on a PETSc DMDA and\\n\"\n  \"solved with SNES (linear residual, true Jacobian, converges in one Newton\\n\"\n  \"step).\\n\\n\"\n  \"Options:\\n\"\n  \"  -da_grid_x <Nx>  number of grid points in R (default 65)\\n\"\n  \"  -da_grid_y <Nz>  number of grid points in Z (default 65)\\n\"\n  \"  -psi_view        VecView the numerical solution\\n\\n\";\n\n#include <petscsnes.h>\n#include <petscdmda.h>\n\n/* Problem geometry and manufactured-solution parameters, shared by the\n   residual and Jacobian callbacks. */\ntypedef struct {\n  PetscReal Rmin, Rmax;   /* R in [Rmin, Rmax]            */\n  PetscReal Zmin, Zmax;   /* Z in [Zmin, Zmax]            */\n  PetscReal aR, aZ;       /* manufactured wavenumbers     */\n} AppCtx;\n\n/* Manufactured exact solution: psi_exact(R,Z) = sin(aR (R-Rmin)) sin(aZ (Z-Zmin)).\n   Vanishes on all four edges (homogeneous Dirichlet). */\nstatic inline PetscReal PsiExact(AppCtx *u, PetscReal R, PetscReal Z)\n{\n  return PetscSinReal(u->aR * (R - u->Rmin)) * PetscSinReal(u->aZ * (Z - u->Zmin));\n}\n\n/* Exact Grad-Shafranov operator applied to psi_exact:\n   Delta^* psi_exact =\n     ( -aR^2 sin(aR(R-Rmin)) - (aR/R) cos(aR(R-Rmin)) ) sin(aZ(Z-Zmin))\n     + sin(aR(R-Rmin)) ( -aZ^2 sin(aZ(Z-Zmin)) ).\n   This is the manufactured right-hand side f(R,Z). */\nstatic inline PetscReal ForcingF(AppCtx *u, PetscReal R, PetscReal Z)\n{\n  PetscReal sR = PetscSinReal(u->aR * (R - u->Rmin));\n  PetscReal cR = PetscCosReal(u->aR * (R - u->Rmin));\n  PetscReal sZ = PetscSinReal(u->aZ * (Z - u->Zmin));\n\n  return (-u->aR * u->aR * sR - (u->aR / R) * cR) * sZ + sR * (-u->aZ * u->aZ * sZ);\n}\n\n/* Residual F(psi) = Delta^*_h psi - f, with Dirichlet rows F = psi - psi_exact. */\nstatic PetscErrorCode FormFunction(SNES snes, Vec X, Vec Fvec, void *ctx)\n{\n  AppCtx        *user = (AppCtx *)ctx;\n  DM             da;\n  DMDALocalInfo  info;\n  PetscReal      hR, hZ, R, Z;\n  PetscScalar  **x, **f;\n  Vec            Xloc;\n\n  PetscFunctionBeginUser;\n  PetscCall(SNESGetDM(snes, &da));\n  PetscCall(DMDAGetLocalInfo(da, &info));\n\n  hR = (user->Rmax - user->Rmin) / (PetscReal)(info.mx - 1);\n  hZ = (user->Zmax - user->Zmin) / (PetscReal)(info.my - 1);\n\n  /* Bring in ghost values for the current iterate. */\n  PetscCall(DMGetLocalVector(da, &Xloc));\n  PetscCall(DMGlobalToLocalBegin(da, X, INSERT_VALUES, Xloc));\n  PetscCall(DMGlobalToLocalEnd(da, X, INSERT_VALUES, Xloc));\n\n  PetscCall(DMDAVecGetArrayRead(da, Xloc, &x));\n  PetscCall(DMDAVecGetArray(da, Fvec, &f));\n\n  for (PetscInt j = info.ys; j < info.ys + info.ym; j++) {\n    Z = user->Zmin + j * hZ;\n    for (PetscInt i = info.xs; i < info.xs + info.xm; i++) {\n      R = user->Rmin + i * hR;\n      if (i == 0 || i == info.mx - 1 || j == 0 || j == info.my - 1) {\n        /* Dirichlet boundary: psi = psi_exact (= 0 on all edges). */\n        f[j][i] = x[j][i] - PsiExact(user, R, Z);\n      } else {\n        /* Delta^*_h psi = (psi_E - 2 psi_P + psi_W)/hR^2\n                           - (1/R)(psi_E - psi_W)/(2 hR)\n                           + (psi_N - 2 psi_P + psi_S)/hZ^2 */\n        PetscScalar dRR = (x[j][i + 1] - 2.0 * x[j][i] + x[j][i - 1]) / (hR * hR);\n        PetscScalar dR  = (x[j][i + 1] - x[j][i - 1]) / (2.0 * hR);\n        PetscScalar dZZ = (x[j + 1][i] - 2.0 * x[j][i] + x[j - 1][i]) / (hZ * hZ);\n        f[j][i] = dRR - dR / R + dZZ - ForcingF(user, R, Z);\n      }\n    }\n  }\n\n  PetscCall(DMDAVecRestoreArrayRead(da, Xloc, &x));\n  PetscCall(DMDAVecRestoreArray(da, Fvec, &f));\n  PetscCall(DMRestoreLocalVector(da, &Xloc));\n  PetscFunctionReturn(PETSC_SUCCESS);\n}\n\n/* True Jacobian of the (linear) residual. */\nstatic PetscErrorCode FormJacobian(SNES snes, Vec X, Mat J, Mat Jpre, void *ctx)\n{\n  AppCtx        *user = (AppCtx *)ctx;\n  DM             da;\n  DMDALocalInfo  info;\n  PetscReal      hR, hZ, R;\n\n  PetscFunctionBeginUser;\n  PetscCall(SNESGetDM(snes, &da));\n  PetscCall(DMDAGetLocalInfo(da, &info));\n\n  hR = (user->Rmax - user->Rmin) / (PetscReal)(info.mx - 1);\n  hZ = (user->Zmax - user->Zmin) / (PetscReal)(info.my - 1);\n\n  for (PetscInt j = info.ys; j < info.ys + info.ym; j++) {\n    for (PetscInt i = info.xs; i < info.xs + info.xm; i++) {\n      MatStencil  row = {0}, col[5] = {{0}};\n      PetscScalar v[5];\n      PetscInt    n = 0;\n\n      row.i = i;\n      row.j = j;\n\n      if (i == 0 || i == info.mx - 1 || j == 0 || j == info.my - 1) {\n        /* Dirichlet row: identity. */\n        col[0].i = i;\n        col[0].j = j;\n        v[0]     = 1.0;\n        n        = 1;\n      } else {\n        R = user->Rmin + i * hR;\n\n        /* South (j-1) */\n        col[n].i = i;\n        col[n].j = j - 1;\n        v[n]     = 1.0 / (hZ * hZ);\n        n++;\n        /* West (i-1) */\n        col[n].i = i - 1;\n        col[n].j = j;\n        v[n]     = 1.0 / (hR * hR) + 1.0 / (2.0 * hR * R);\n        n++;\n        /* Center */\n        col[n].i = i;\n        col[n].j = j;\n        v[n]     = -2.0 / (hR * hR) - 2.0 / (hZ * hZ);\n        n++;\n        /* East (i+1) */\n        col[n].i = i + 1;\n        col[n].j = j;\n        v[n]     = 1.0 / (hR * hR) - 1.0 / (2.0 * hR * R);\n        n++;\n        /* North (j+1) */\n        col[n].i = i;\n        col[n].j = j + 1;\n        v[n]     = 1.0 / (hZ * hZ);\n        n++;\n      }\n      PetscCall(MatSetValuesStencil(Jpre, 1, &row, n, col, v, INSERT_VALUES));\n    }\n  }\n\n  PetscCall(MatAssemblyBegin(Jpre, MAT_FINAL_ASSEMBLY));\n  PetscCall(MatAssemblyEnd(Jpre, MAT_FINAL_ASSEMBLY));\n  if (J != Jpre) {\n    PetscCall(MatAssemblyBegin(J, MAT_FINAL_ASSEMBLY));\n    PetscCall(MatAssemblyEnd(J, MAT_FINAL_ASSEMBLY));\n  }\n  PetscFunctionReturn(PETSC_SUCCESS);\n}\n\nint main(int argc, char **argv)\n{\n  AppCtx             user;\n  DM                 da;\n  SNES               snes;\n  Vec                x, r, xexact;\n  Mat                J;\n  DMDALocalInfo      info;\n  PetscReal          hR, hZ, errinf, errl2;\n  SNESConvergedReason reason;\n\n  PetscFunctionBeginUser;\n  PetscCall(PetscInitialize(&argc, &argv, NULL, help));\n\n  /* Geometry and manufactured-solution parameters. */\n  user.Rmin = 1.0;\n  user.Rmax = 3.0;\n  user.Zmin = -1.5;\n  user.Zmax = 1.5;\n  user.aR   = PETSC_PI / (user.Rmax - user.Rmin);\n  user.aZ   = PETSC_PI / (user.Zmax - user.Zmin);\n\n  /* Structured grid; default 65 x 65, override with -da_grid_x / -da_grid_y.\n     Include the boundary points so hR=(Rmax-Rmin)/(Nx-1), hZ=(Zmax-Zmin)/(Nz-1). */\n  PetscCall(DMDACreate2d(PETSC_COMM_WORLD, DM_BOUNDARY_NONE, DM_BOUNDARY_NONE,\n                         DMDA_STENCIL_STAR, 65, 65, PETSC_DECIDE, PETSC_DECIDE,\n                         1, 1, NULL, NULL, &da));\n  PetscCall(DMSetFromOptions(da));\n  PetscCall(DMSetUp(da));\n  PetscCall(DMDASetUniformCoordinates(da, user.Rmin, user.Rmax, user.Zmin, user.Zmax, 0.0, 0.0));\n\n  PetscCall(DMDAGetLocalInfo(da, &info));\n  hR = (user.Rmax - user.Rmin) / (PetscReal)(info.mx - 1);\n  hZ = (user.Zmax - user.Zmin) / (PetscReal)(info.my - 1);\n\n  PetscCall(DMCreateGlobalVector(da, &x));\n  PetscCall(VecDuplicate(x, &r));\n  PetscCall(VecDuplicate(x, &xexact));\n  PetscCall(DMCreateMatrix(da, &J));\n\n  PetscCall(SNESCreate(PETSC_COMM_WORLD, &snes));\n  PetscCall(SNESSetDM(snes, da));\n  PetscCall(SNESSetFunction(snes, r, FormFunction, &user));\n  PetscCall(SNESSetJacobian(snes, J, J, FormJacobian, &user));\n  PetscCall(SNESSetFromOptions(snes));\n\n  /* Solve Delta^* psi = f starting from zero. */\n  PetscCall(VecSet(x, 0.0));\n  PetscCall(SNESSolve(snes, NULL, x));\n  PetscCall(SNESGetConvergedReason(snes, &reason));\n\n  /* Build the exact solution on the grid. */\n  {\n    PetscScalar **xe;\n    PetscCall(DMDAVecGetArray(da, xexact, &xe));\n    for (PetscInt j = info.ys; j < info.ys + info.ym; j++) {\n      PetscReal Z = user.Zmin + j * hZ;\n      for (PetscInt i = info.xs; i < info.xs + info.xm; i++) {\n        PetscReal R = user.Rmin + i * hR;\n        xe[j][i] = PsiExact(&user, R, Z);\n      }\n    }\n    PetscCall(DMDAVecRestoreArray(da, xexact, &xe));\n  }\n\n  /* Errors: max-norm and discrete L2 (h-weighted). */\n  {\n    Vec e;\n    PetscReal nrm2;\n    PetscCall(VecDuplicate(x, &e));\n    PetscCall(VecWAXPY(e, -1.0, xexact, x)); /* e = x - xexact */\n    PetscCall(VecNorm(e, NORM_INFINITY, &errinf));\n    PetscCall(VecNorm(e, NORM_2, &nrm2));\n    errl2 = nrm2 * PetscSqrtReal(hR * hZ);\n    PetscCall(VecDestroy(&e));\n  }\n\n  /* Required output. */\n  PetscCall(PetscPrintf(PETSC_COMM_WORLD, \"Grid Nx Nz            : %\" PetscInt_FMT \" %\" PetscInt_FMT \"\\n\", info.mx, info.my));\n  PetscCall(PetscPrintf(PETSC_COMM_WORLD, \"Spacings hR hZ        : %g %g\\n\", (double)hR, (double)hZ));\n  PetscCall(PetscPrintf(PETSC_COMM_WORLD, \"Max-norm error inf    : %g\\n\", (double)errinf));\n  PetscCall(PetscPrintf(PETSC_COMM_WORLD, \"Discrete L2 error     : %g\\n\", (double)errl2));\n  PetscCall(PetscPrintf(PETSC_COMM_WORLD, \"SNESConvergedReason   : %s\\n\", SNESConvergedReasons[reason]));\n\n  /* Optional: view the numerical solution. */\n  {\n    PetscBool view = PETSC_FALSE;\n    PetscCall(PetscOptionsGetBool(NULL, NULL, \"-psi_view\", &view, NULL));\n    if (view) PetscCall(VecView(x, PETSC_VIEWER_STDOUT_WORLD));\n  }\n\n  PetscCall(MatDestroy(&J));\n  PetscCall(VecDestroy(&x));\n  PetscCall(VecDestroy(&r));\n  PetscCall(VecDestroy(&xexact));\n  PetscCall(SNESDestroy(&snes));\n  PetscCall(DMDestroy(&da));\n  PetscCall(PetscFinalize());\n  return 0;\n}",
+  "output": "Grid Nx Nz            : 65 65\nSpacings hR hZ        : 0.03125 0.046875\nMax-norm error inf    : 0.000210906\nDiscrete L2 error     : 0.00025865\nSNESConvergedReason   : CONVERGED_FNORM_RELATIVE"
+}
+```
+Located body of triple tick
+
+
+{
+  "code": "static char help[] =\n  \"Solve the tokamak Grad-Shafranov equilibrium for the poloidal flux psi(R,Z)\\n\"\n  \"on a 2D structured rectangular (R,Z) domain, verified via the method of\\n\"\n  \"manufactured solutions.\\n\\n\"\n  \"Operator: Delta^* psi = d2psi/dR2 - (1/R) dpsi/dR + d2psi/dZ2\\n\"\n  \"Discretized with 2nd-order central finite differences on a PETSc DMDA and\\n\"\n  \"solved with SNES (linear residual, true Jacobian, converges in one Newton\\n\"\n  \"step).\\n\\n\"\n  \"Options:\\n\"\n  \"  -da_grid_x <Nx>  number of grid points in R (default 65)\\n\"\n  \"  -da_grid_y <Nz>  number of grid points in Z (default 65)\\n\"\n  \"  -psi_view        VecView the numerical solution\\n\\n\";\n\n#include <petscsnes.h>\n#include <petscdmda.h>\n\n/* Problem geometry and manufactured-solution parameters, shared by the\n   residual and Jacobian callbacks. */\ntypedef struct {\n  PetscReal Rmin, Rmax;   /* R in [Rmin, Rmax]            */\n  PetscReal Zmin, Zmax;   /* Z in [Zmin, Zmax]            */\n  PetscReal aR, aZ;       /* manufactured wavenumbers     */\n} AppCtx;\n\n/* Manufactured exact solution: psi_exact(R,Z) = sin(aR (R-Rmin)) sin(aZ (Z-Zmin)).\n   Vanishes on all four edges (homogeneous Dirichlet). */\nstatic inline PetscReal PsiExact(AppCtx *u, PetscReal R, PetscReal Z)\n{\n  return PetscSinReal(u->aR * (R - u->Rmin)) * PetscSinReal(u->aZ * (Z - u->Zmin));\n}\n\n/* Exact Grad-Shafranov operator applied to psi_exact:\n   Delta^* psi_exact =\n     ( -aR^2 sin(aR(R-Rmin)) - (aR/R) cos(aR(R-Rmin)) ) sin(aZ(Z-Zmin))\n     + sin(aR(R-Rmin)) ( -aZ^2 sin(aZ(Z-Zmin)) ).\n   This is the manufactured right-hand side f(R,Z). */\nstatic inline PetscReal ForcingF(AppCtx *u, PetscReal R, PetscReal Z)\n{\n  PetscReal sR = PetscSinReal(u->aR * (R - u->Rmin));\n  PetscReal cR = PetscCosReal(u->aR * (R - u->Rmin));\n  PetscReal sZ = PetscSinReal(u->aZ * (Z - u->Zmin));\n\n  return (-u->aR * u->aR * sR - (u->aR / R) * cR) * sZ + sR * (-u->aZ * u->aZ * sZ);\n}\n\n/* Residual F(psi) = Delta^*_h psi - f, with Dirichlet rows F = psi - psi_exact. */\nstatic PetscErrorCode FormFunction(SNES snes, Vec X, Vec Fvec, void *ctx)\n{\n  AppCtx        *user = (AppCtx *)ctx;\n  DM             da;\n  DMDALocalInfo  info;\n  PetscReal      hR, hZ, R, Z;\n  PetscScalar  **x, **f;\n  Vec            Xloc;\n\n  PetscFunctionBeginUser;\n  PetscCall(SNESGetDM(snes, &da));\n  PetscCall(DMDAGetLocalInfo(da, &info));\n\n  hR = (user->Rmax - user->Rmin) / (PetscReal)(info.mx - 1);\n  hZ = (user->Zmax - user->Zmin) / (PetscReal)(info.my - 1);\n\n  /* Bring in ghost values for the current iterate. */\n  PetscCall(DMGetLocalVector(da, &Xloc));\n  PetscCall(DMGlobalToLocalBegin(da, X, INSERT_VALUES, Xloc));\n  PetscCall(DMGlobalToLocalEnd(da, X, INSERT_VALUES, Xloc));\n\n  PetscCall(DMDAVecGetArrayRead(da, Xloc, &x));\n  PetscCall(DMDAVecGetArray(da, Fvec, &f));\n\n  for (PetscInt j = info.ys; j < info.ys + info.ym; j++) {\n    Z = user->Zmin + j * hZ;\n    for (PetscInt i = info.xs; i < info.xs + info.xm; i++) {\n      R = user->Rmin + i * hR;\n      if (i == 0 || i == info.mx - 1 || j == 0 || j == info.my - 1) {\n        /* Dirichlet boundary: psi = psi_exact (= 0 on all edges). */\n        f[j][i] = x[j][i] - PsiExact(user, R, Z);\n      } else {\n        /* Delta^*_h psi = (psi_E - 2 psi_P + psi_W)/hR^2\n                           - (1/R)(psi_E - psi_W)/(2 hR)\n                           + (psi_N - 2 psi_P + psi_S)/hZ^2 */\n        PetscScalar dRR = (x[j][i + 1] - 2.0 * x[j][i] + x[j][i - 1]) / (hR * hR);\n        PetscScalar dR  = (x[j][i + 1] - x[j][i - 1]) / (2.0 * hR);\n        PetscScalar dZZ = (x[j + 1][i] - 2.0 * x[j][i] + x[j - 1][i]) / (hZ * hZ);\n        f[j][i] = dRR - dR / R + dZZ - ForcingF(user, R, Z);\n      }\n    }\n  }\n\n  PetscCall(DMDAVecRestoreArrayRead(da, Xloc, &x));\n  PetscCall(DMDAVecRestoreArray(da, Fvec, &f));\n  PetscCall(DMRestoreLocalVector(da, &Xloc));\n  PetscFunctionReturn(PETSC_SUCCESS);\n}\n\n/* True Jacobian of the (linear) residual. */\nstatic PetscErrorCode FormJacobian(SNES snes, Vec X, Mat J, Mat Jpre, void *ctx)\n{\n  AppCtx        *user = (AppCtx *)ctx;\n  DM             da;\n  DMDALocalInfo  info;\n  PetscReal      hR, hZ, R;\n\n  PetscFunctionBeginUser;\n  PetscCall(SNESGetDM(snes, &da));\n  PetscCall(DMDAGetLocalInfo(da, &info));\n\n  hR = (user->Rmax - user->Rmin) / (PetscReal)(info.mx - 1);\n  hZ = (user->Zmax - user->Zmin) / (PetscReal)(info.my - 1);\n\n  for (PetscInt j = info.ys; j < info.ys + info.ym; j++) {\n    for (PetscInt i = info.xs; i < info.xs + info.xm; i++) {\n      MatStencil  row = {0}, col[5] = {{0}};\n      PetscScalar v[5];\n      PetscInt    n = 0;\n\n      row.i = i;\n      row.j = j;\n\n      if (i == 0 || i == info.mx - 1 || j == 0 || j == info.my - 1) {\n        /* Dirichlet row: identity. */\n        col[0].i = i;\n        col[0].j = j;\n        v[0]     = 1.0;\n        n        = 1;\n      } else {\n        R = user->Rmin + i * hR;\n\n        /* South (j-1) */\n        col[n].i = i;\n        col[n].j = j - 1;\n        v[n]     = 1.0 / (hZ * hZ);\n        n++;\n        /* West (i-1) */\n        col[n].i = i - 1;\n        col[n].j = j;\n        v[n]     = 1.0 / (hR * hR) + 1.0 / (2.0 * hR * R);\n        n++;\n        /* Center */\n        col[n].i = i;\n        col[n].j = j;\n        v[n]     = -2.0 / (hR * hR) - 2.0 / (hZ * hZ);\n        n++;\n        /* East (i+1) */\n        col[n].i = i + 1;\n        col[n].j = j;\n        v[n]     = 1.0 / (hR * hR) - 1.0 / (2.0 * hR * R);\n        n++;\n        /* North (j+1) */\n        col[n].i = i;\n        col[n].j = j + 1;\n        v[n]     = 1.0 / (hZ * hZ);\n        n++;\n      }\n      PetscCall(MatSetValuesStencil(Jpre, 1, &row, n, col, v, INSERT_VALUES));\n    }\n  }\n\n  PetscCall(MatAssemblyBegin(Jpre, MAT_FINAL_ASSEMBLY));\n  PetscCall(MatAssemblyEnd(Jpre, MAT_FINAL_ASSEMBLY));\n  if (J != Jpre) {\n    PetscCall(MatAssemblyBegin(J, MAT_FINAL_ASSEMBLY));\n    PetscCall(MatAssemblyEnd(J, MAT_FINAL_ASSEMBLY));\n  }\n  PetscFunctionReturn(PETSC_SUCCESS);\n}\n\nint main(int argc, char **argv)\n{\n  AppCtx             user;\n  DM                 da;\n  SNES               snes;\n  Vec                x, r, xexact;\n  Mat                J;\n  DMDALocalInfo      info;\n  PetscReal          hR, hZ, errinf, errl2;\n  SNESConvergedReason reason;\n\n  PetscFunctionBeginUser;\n  PetscCall(PetscInitialize(&argc, &argv, NULL, help));\n\n  /* Geometry and manufactured-solution parameters. */\n  user.Rmin = 1.0;\n  user.Rmax = 3.0;\n  user.Zmin = -1.5;\n  user.Zmax = 1.5;\n  user.aR   = PETSC_PI / (user.Rmax - user.Rmin);\n  user.aZ   = PETSC_PI / (user.Zmax - user.Zmin);\n\n  /* Structured grid; default 65 x 65, override with -da_grid_x / -da_grid_y.\n     Include the boundary points so hR=(Rmax-Rmin)/(Nx-1), hZ=(Zmax-Zmin)/(Nz-1). */\n  PetscCall(DMDACreate2d(PETSC_COMM_WORLD, DM_BOUNDARY_NONE, DM_BOUNDARY_NONE,\n                         DMDA_STENCIL_STAR, 65, 65, PETSC_DECIDE, PETSC_DECIDE,\n                         1, 1, NULL, NULL, &da));\n  PetscCall(DMSetFromOptions(da));\n  PetscCall(DMSetUp(da));\n  PetscCall(DMDASetUniformCoordinates(da, user.Rmin, user.Rmax, user.Zmin, user.Zmax, 0.0, 0.0));\n\n  PetscCall(DMDAGetLocalInfo(da, &info));\n  hR = (user.Rmax - user.Rmin) / (PetscReal)(info.mx - 1);\n  hZ = (user.Zmax - user.Zmin) / (PetscReal)(info.my - 1);\n\n  PetscCall(DMCreateGlobalVector(da, &x));\n  PetscCall(VecDuplicate(x, &r));\n  PetscCall(VecDuplicate(x, &xexact));\n  PetscCall(DMCreateMatrix(da, &J));\n\n  PetscCall(SNESCreate(PETSC_COMM_WORLD, &snes));\n  PetscCall(SNESSetDM(snes, da));\n  PetscCall(SNESSetFunction(snes, r, FormFunction, &user));\n  PetscCall(SNESSetJacobian(snes, J, J, FormJacobian, &user));\n  PetscCall(SNESSetFromOptions(snes));\n\n  /* Solve Delta^* psi = f starting from zero. */\n  PetscCall(VecSet(x, 0.0));\n  PetscCall(SNESSolve(snes, NULL, x));\n  PetscCall(SNESGetConvergedReason(snes, &reason));\n\n  /* Build the exact solution on the grid. */\n  {\n    PetscScalar **xe;\n    PetscCall(DMDAVecGetArray(da, xexact, &xe));\n    for (PetscInt j = info.ys; j < info.ys + info.ym; j++) {\n      PetscReal Z = user.Zmin + j * hZ;\n      for (PetscInt i = info.xs; i < info.xs + info.xm; i++) {\n        PetscReal R = user.Rmin + i * hR;\n        xe[j][i] = PsiExact(&user, R, Z);\n      }\n    }\n    PetscCall(DMDAVecRestoreArray(da, xexact, &xe));\n  }\n\n  /* Errors: max-norm and discrete L2 (h-weighted). */\n  {\n    Vec e;\n    PetscReal nrm2;\n    PetscCall(VecDuplicate(x, &e));\n    PetscCall(VecWAXPY(e, -1.0, xexact, x)); /* e = x - xexact */\n    PetscCall(VecNorm(e, NORM_INFINITY, &errinf));\n    PetscCall(VecNorm(e, NORM_2, &nrm2));\n    errl2 = nrm2 * PetscSqrtReal(hR * hZ);\n    PetscCall(VecDestroy(&e));\n  }\n\n  /* Required output. */\n  PetscCall(PetscPrintf(PETSC_COMM_WORLD, \"Grid Nx Nz            : %\" PetscInt_FMT \" %\" PetscInt_FMT \"\\n\", info.mx, info.my));\n  PetscCall(PetscPrintf(PETSC_COMM_WORLD, \"Spacings hR hZ        : %g %g\\n\", (double)hR, (double)hZ));\n  PetscCall(PetscPrintf(PETSC_COMM_WORLD, \"Max-norm error inf    : %g\\n\", (double)errinf));\n  PetscCall(PetscPrintf(PETSC_COMM_WORLD, \"Discrete L2 error     : %g\\n\", (double)errl2));\n  PetscCall(PetscPrintf(PETSC_COMM_WORLD, \"SNESConvergedReason   : %s\\n\", SNESConvergedReasons[reason]));\n\n  /* Optional: view the numerical solution. */\n  {\n    PetscBool view = PETSC_FALSE;\n    PetscCall(PetscOptionsGetBool(NULL, NULL, \"-psi_view\", &view, NULL));\n    if (view) PetscCall(VecView(x, PETSC_VIEWER_STDOUT_WORLD));\n  }\n\n  PetscCall(MatDestroy(&J));\n  PetscCall(VecDestroy(&x));\n  PetscCall(VecDestroy(&r));\n  PetscCall(VecDestroy(&xexact));\n  PetscCall(SNESDestroy(&snes));\n  PetscCall(DMDestroy(&da));\n  PetscCall(PetscFinalize());\n  return 0;\n}",
+  "output": "Grid Nx Nz            : 65 65\nSpacings hR hZ        : 0.03125 0.046875\nMax-norm error inf    : 0.000210906\nDiscrete L2 error     : 0.00025865\nSNESConvergedReason   : CONVERGED_FNORM_RELATIVE"
+}
+
+Extracted json triple-tick block
+
+{
+  "code": "static char help[] =\n  \"Solve the tokamak Grad-Shafranov equilibrium for the poloidal flux psi(R,Z)\\n\"\n  \"on a 2D structured rectangular (R,Z) domain, verified via the method of\\n\"\n  \"manufactured solutions.\\n\\n\"\n  \"Operator: Delta^* psi = d2psi/dR2 - (1/R) dpsi/dR + d2psi/dZ2\\n\"\n  \"Discretized with 2nd-order central finite differences on a PETSc DMDA and\\n\"\n  \"solved with SNES (linear residual, true Jacobian, converges in one Newton\\n\"\n  \"step).\\n\\n\"\n  \"Options:\\n\"\n  \"  -da_grid_x <Nx>  number of grid points in R (default 65)\\n\"\n  \"  -da_grid_y <Nz>  number of grid points in Z (default 65)\\n\"\n  \"  -psi_view        VecView the numerical solution\\n\\n\";\n\n#include <petscsnes.h>\n#include <petscdmda.h>\n\n/* Problem geometry and manufactured-solution parameters, shared by the\n   residual and Jacobian callbacks. */\ntypedef struct {\n  PetscReal Rmin, Rmax;   /* R in [Rmin, Rmax]            */\n  PetscReal Zmin, Zmax;   /* Z in [Zmin, Zmax]            */\n  PetscReal aR, aZ;       /* manufactured wavenumbers     */\n} AppCtx;\n\n/* Manufactured exact solution: psi_exact(R,Z) = sin(aR (R-Rmin)) sin(aZ (Z-Zmin)).\n   Vanishes on all four edges (homogeneous Dirichlet). */\nstatic inline PetscReal PsiExact(AppCtx *u, PetscReal R, PetscReal Z)\n{\n  return PetscSinReal(u->aR * (R - u->Rmin)) * PetscSinReal(u->aZ * (Z - u->Zmin));\n}\n\n/* Exact Grad-Shafranov operator applied to psi_exact:\n   Delta^* psi_exact =\n     ( -aR^2 sin(aR(R-Rmin)) - (aR/R) cos(aR(R-Rmin)) ) sin(aZ(Z-Zmin))\n     + sin(aR(R-Rmin)) ( -aZ^2 sin(aZ(Z-Zmin)) ).\n   This is the manufactured right-hand side f(R,Z). */\nstatic inline PetscReal ForcingF(AppCtx *u, PetscReal R, PetscReal Z)\n{\n  PetscReal sR = PetscSinReal(u->aR * (R - u->Rmin));\n  PetscReal cR = PetscCosReal(u->aR * (R - u->Rmin));\n  PetscReal sZ = PetscSinReal(u->aZ * (Z - u->Zmin));\n\n  return (-u->aR * u->aR * sR - (u->aR / R) * cR) * sZ + sR * (-u->aZ * u->aZ * sZ);\n}\n\n/* Residual F(psi) = Delta^*_h psi - f, with Dirichlet rows F = psi - psi_exact. */\nstatic PetscErrorCode FormFunction(SNES snes, Vec X, Vec Fvec, void *ctx)\n{\n  AppCtx        *user = (AppCtx *)ctx;\n  DM             da;\n  DMDALocalInfo  info;\n  PetscReal      hR, hZ, R, Z;\n  PetscScalar  **x, **f;\n  Vec            Xloc;\n\n  PetscFunctionBeginUser;\n  PetscCall(SNESGetDM(snes, &da));\n  PetscCall(DMDAGetLocalInfo(da, &info));\n\n  hR = (user->Rmax - user->Rmin) / (PetscReal)(info.mx - 1);\n  hZ = (user->Zmax - user->Zmin) / (PetscReal)(info.my - 1);\n\n  /* Bring in ghost values for the current iterate. */\n  PetscCall(DMGetLocalVector(da, &Xloc));\n  PetscCall(DMGlobalToLocalBegin(da, X, INSERT_VALUES, Xloc));\n  PetscCall(DMGlobalToLocalEnd(da, X, INSERT_VALUES, Xloc));\n\n  PetscCall(DMDAVecGetArrayRead(da, Xloc, &x));\n  PetscCall(DMDAVecGetArray(da, Fvec, &f));\n\n  for (PetscInt j = info.ys; j < info.ys + info.ym; j++) {\n    Z = user->Zmin + j * hZ;\n    for (PetscInt i = info.xs; i < info.xs + info.xm; i++) {\n      R = user->Rmin + i * hR;\n      if (i == 0 || i == info.mx - 1 || j == 0 || j == info.my - 1) {\n        /* Dirichlet boundary: psi = psi_exact (= 0 on all edges). */\n        f[j][i] = x[j][i] - PsiExact(user, R, Z);\n      } else {\n        /* Delta^*_h psi = (psi_E - 2 psi_P + psi_W)/hR^2\n                           - (1/R)(psi_E - psi_W)/(2 hR)\n                           + (psi_N - 2 psi_P + psi_S)/hZ^2 */\n        PetscScalar dRR = (x[j][i + 1] - 2.0 * x[j][i] + x[j][i - 1]) / (hR * hR);\n        PetscScalar dR  = (x[j][i + 1] - x[j][i - 1]) / (2.0 * hR);\n        PetscScalar dZZ = (x[j + 1][i] - 2.0 * x[j][i] + x[j - 1][i]) / (hZ * hZ);\n        f[j][i] = dRR - dR / R + dZZ - ForcingF(user, R, Z);\n      }\n    }\n  }\n\n  PetscCall(DMDAVecRestoreArrayRead(da, Xloc, &x));\n  PetscCall(DMDAVecRestoreArray(da, Fvec, &f));\n  PetscCall(DMRestoreLocalVector(da, &Xloc));\n  PetscFunctionReturn(PETSC_SUCCESS);\n}\n\n/* True Jacobian of the (linear) residual. */\nstatic PetscErrorCode FormJacobian(SNES snes, Vec X, Mat J, Mat Jpre, void *ctx)\n{\n  AppCtx        *user = (AppCtx *)ctx;\n  DM             da;\n  DMDALocalInfo  info;\n  PetscReal      hR, hZ, R;\n\n  PetscFunctionBeginUser;\n  PetscCall(SNESGetDM(snes, &da));\n  PetscCall(DMDAGetLocalInfo(da, &info));\n\n  hR = (user->Rmax - user->Rmin) / (PetscReal)(info.mx - 1);\n  hZ = (user->Zmax - user->Zmin) / (PetscReal)(info.my - 1);\n\n  for (PetscInt j = info.ys; j < info.ys + info.ym; j++) {\n    for (PetscInt i = info.xs; i < info.xs + info.xm; i++) {\n      MatStencil  row = {0}, col[5] = {{0}};\n      PetscScalar v[5];\n      PetscInt    n = 0;\n\n      row.i = i;\n      row.j = j;\n\n      if (i == 0 || i == info.mx - 1 || j == 0 || j == info.my - 1) {\n        /* Dirichlet row: identity. */\n        col[0].i = i;\n        col[0].j = j;\n        v[0]     = 1.0;\n        n        = 1;\n      } else {\n        R = user->Rmin + i * hR;\n\n        /* South (j-1) */\n        col[n].i = i;\n        col[n].j = j - 1;\n        v[n]     = 1.0 / (hZ * hZ);\n        n++;\n        /* West (i-1) */\n        col[n].i = i - 1;\n        col[n].j = j;\n        v[n]     = 1.0 / (hR * hR) + 1.0 / (2.0 * hR * R);\n        n++;\n        /* Center */\n        col[n].i = i;\n        col[n].j = j;\n        v[n]     = -2.0 / (hR * hR) - 2.0 / (hZ * hZ);\n        n++;\n        /* East (i+1) */\n        col[n].i = i + 1;\n        col[n].j = j;\n        v[n]     = 1.0 / (hR * hR) - 1.0 / (2.0 * hR * R);\n        n++;\n        /* North (j+1) */\n        col[n].i = i;\n        col[n].j = j + 1;\n        v[n]     = 1.0 / (hZ * hZ);\n        n++;\n      }\n      PetscCall(MatSetValuesStencil(Jpre, 1, &row, n, col, v, INSERT_VALUES));\n    }\n  }\n\n  PetscCall(MatAssemblyBegin(Jpre, MAT_FINAL_ASSEMBLY));\n  PetscCall(MatAssemblyEnd(Jpre, MAT_FINAL_ASSEMBLY));\n  if (J != Jpre) {\n    PetscCall(MatAssemblyBegin(J, MAT_FINAL_ASSEMBLY));\n    PetscCall(MatAssemblyEnd(J, MAT_FINAL_ASSEMBLY));\n  }\n  PetscFunctionReturn(PETSC_SUCCESS);\n}\n\nint main(int argc, char **argv)\n{\n  AppCtx             user;\n  DM                 da;\n  SNES               snes;\n  Vec                x, r, xexact;\n  Mat                J;\n  DMDALocalInfo      info;\n  PetscReal          hR, hZ, errinf, errl2;\n  SNESConvergedReason reason;\n\n  PetscFunctionBeginUser;\n  PetscCall(PetscInitialize(&argc, &argv, NULL, help));\n\n  /* Geometry and manufactured-solution parameters. */\n  user.Rmin = 1.0;\n  user.Rmax = 3.0;\n  user.Zmin = -1.5;\n  user.Zmax = 1.5;\n  user.aR   = PETSC_PI / (user.Rmax - user.Rmin);\n  user.aZ   = PETSC_PI / (user.Zmax - user.Zmin);\n\n  /* Structured grid; default 65 x 65, override with -da_grid_x / -da_grid_y.\n     Include the boundary points so hR=(Rmax-Rmin)/(Nx-1), hZ=(Zmax-Zmin)/(Nz-1). */\n  PetscCall(DMDACreate2d(PETSC_COMM_WORLD, DM_BOUNDARY_NONE, DM_BOUNDARY_NONE,\n                         DMDA_STENCIL_STAR, 65, 65, PETSC_DECIDE, PETSC_DECIDE,\n                         1, 1, NULL, NULL, &da));\n  PetscCall(DMSetFromOptions(da));\n  PetscCall(DMSetUp(da));\n  PetscCall(DMDASetUniformCoordinates(da, user.Rmin, user.Rmax, user.Zmin, user.Zmax, 0.0, 0.0));\n\n  PetscCall(DMDAGetLocalInfo(da, &info));\n  hR = (user.Rmax - user.Rmin) / (PetscReal)(info.mx - 1);\n  hZ = (user.Zmax - user.Zmin) / (PetscReal)(info.my - 1);\n\n  PetscCall(DMCreateGlobalVector(da, &x));\n  PetscCall(VecDuplicate(x, &r));\n  PetscCall(VecDuplicate(x, &xexact));\n  PetscCall(DMCreateMatrix(da, &J));\n\n  PetscCall(SNESCreate(PETSC_COMM_WORLD, &snes));\n  PetscCall(SNESSetDM(snes, da));\n  PetscCall(SNESSetFunction(snes, r, FormFunction, &user));\n  PetscCall(SNESSetJacobian(snes, J, J, FormJacobian, &user));\n  PetscCall(SNESSetFromOptions(snes));\n\n  /* Solve Delta^* psi = f starting from zero. */\n  PetscCall(VecSet(x, 0.0));\n  PetscCall(SNESSolve(snes, NULL, x));\n  PetscCall(SNESGetConvergedReason(snes, &reason));\n\n  /* Build the exact solution on the grid. */\n  {\n    PetscScalar **xe;\n    PetscCall(DMDAVecGetArray(da, xexact, &xe));\n    for (PetscInt j = info.ys; j < info.ys + info.ym; j++) {\n      PetscReal Z = user.Zmin + j * hZ;\n      for (PetscInt i = info.xs; i < info.xs + info.xm; i++) {\n        PetscReal R = user.Rmin + i * hR;\n        xe[j][i] = PsiExact(&user, R, Z);\n      }\n    }\n    PetscCall(DMDAVecRestoreArray(da, xexact, &xe));\n  }\n\n  /* Errors: max-norm and discrete L2 (h-weighted). */\n  {\n    Vec e;\n    PetscReal nrm2;\n    PetscCall(VecDuplicate(x, &e));\n    PetscCall(VecWAXPY(e, -1.0, xexact, x)); /* e = x - xexact */\n    PetscCall(VecNorm(e, NORM_INFINITY, &errinf));\n    PetscCall(VecNorm(e, NORM_2, &nrm2));\n    errl2 = nrm2 * PetscSqrtReal(hR * hZ);\n    PetscCall(VecDestroy(&e));\n  }\n\n  /* Required output. */\n  PetscCall(PetscPrintf(PETSC_COMM_WORLD, \"Grid Nx Nz            : %\" PetscInt_FMT \" %\" PetscInt_FMT \"\\n\", info.mx, info.my));\n  PetscCall(PetscPrintf(PETSC_COMM_WORLD, \"Spacings hR hZ        : %g %g\\n\", (double)hR, (double)hZ));\n  PetscCall(PetscPrintf(PETSC_COMM_WORLD, \"Max-norm error inf    : %g\\n\", (double)errinf));\n  PetscCall(PetscPrintf(PETSC_COMM_WORLD, \"Discrete L2 error     : %g\\n\", (double)errl2));\n  PetscCall(PetscPrintf(PETSC_COMM_WORLD, \"SNESConvergedReason   : %s\\n\", SNESConvergedReasons[reason]));\n\n  /* Optional: view the numerical solution. */\n  {\n    PetscBool view = PETSC_FALSE;\n    PetscCall(PetscOptionsGetBool(NULL, NULL, \"-psi_view\", &view, NULL));\n    if (view) PetscCall(VecView(x, PETSC_VIEWER_STDOUT_WORLD));\n  }\n\n  PetscCall(MatDestroy(&J));\n  PetscCall(VecDestroy(&x));\n  PetscCall(VecDestroy(&r));\n  PetscCall(VecDestroy(&xexact));\n  PetscCall(SNESDestroy(&snes));\n  PetscCall(DMDestroy(&da));\n  PetscCall(PetscFinalize());\n  return 0;\n}",
+  "output": "Grid Nx Nz            : 65 65\nSpacings hR hZ        : 0.03125 0.046875\nMax-norm error inf    : 0.000210906\nDiscrete L2 error     : 0.00025865\nSNESConvergedReason   : CONVERGED_FNORM_RELATIVE"
+}
+/home/sarthak.sharma/petsc/arch-linux-c-opt/bin/mpicc -Wall -Wwrite-strings -Wno-unknown-pragmas -Wno-lto-type-mismatch -Wno-stringop-overflow -fstack-protector -fvisibility=hidden -O3 -march=native  -I/home/sarthak.sharma/petsc/include -I/home/sarthak.sharma/petsc/arch-linux-c-opt/include     -Wl,-export-dynamic mytest.c   -Wl,-rpath,/home/sarthak.sharma/petsc/arch-linux-c-opt/lib -L/home/sarthak.sharma/petsc/arch-linux-c-opt/lib -Wl,-rpath,/usr/lib/gcc/x86_64-linux-gnu/13 -L/usr/lib/gcc/x86_64-linux-gnu/13 -lpetsc -lsuperlu_dist -llapack -lblas -lparmetis -lmetis -ltriangle -lm -lX11 -lmpifort -lmpi -lgfortran -lm -lgfortran -lm -lgcc_s -lquadmath -lstdc++  -o mytest
+
+[codegen] OK  (loops=21 tools=5, 293s)
+=== done. stages: {'model': 'ok', 'na': 'ok', 'codegen': 'ok'} ===
+    latest run: run-20260723-113024
