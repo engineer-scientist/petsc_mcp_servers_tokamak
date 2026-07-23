@@ -22,7 +22,7 @@ generation for PDE-based simulation science.
 | 4 | Post-processing figures (convergence, flux surfaces) | ✅ Session 1 · q-profile + shaped ⬜ |
 | 5 | Demonstrate the built-in **orchestrator** agent end-to-end (where feasible) | ⬜ |
 | 6 | **Metrics** vs the proposal's decision gates (correctness, human-time, tokens/cost) | ✅ Session 1 (`metrics.md`) |
-| 7 | **US-RSE 2026 poster** — abstract ✅ (draft, docx) · poster PDF ⬜ | 🟡 |
+| 7 | **US-RSE 2026 poster** — abstract ✅ (docx) · editable poster PPTX ✅ · presenter details + PDF export ⬜ | 🟡 |
 | 8 | **Argonne intern presentation** (slides) | 🟡 draft deck ✅ · restyle on ANL template ⬜ |
 | 9 | Real-machine shaping (Solov'ev/Cerfon–Freidberg D-shape + X-point, q-profile) | ⬜ |
 | 10 | Stretch: harder physics (nonlinear profiles; time-dependent/resistive MHD) | ⬜ |

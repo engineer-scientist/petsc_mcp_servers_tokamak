@@ -67,8 +67,10 @@ no-docs/no-RAG code-gen, higher code-gen loop cap + prompt to return after first
 **Still open.**
 - **Push the git repo** to `github.com/engineer-scientist/petsc_mcp_servers_tokamak`
   (user does this; nothing pushed yet).
-- **Poster/presenter details**: `poster/abstract.md` has `[PRESENTER ...]` placeholders
-  (name/email/ORCID) to fill. Poster PDF still to design (abstract due **Aug 7, 2026**).
+- **Poster/presenter details**: `poster/abstract.md` and the editable poster
+  `poster/USRSE26_poster.pptx` (48×36 in, built by `poster/make_poster.py`) have
+  `[PRESENTER ...]` placeholders (name/email/ORCID) to fill; then export to PDF for
+  EasyChair (abstract due **Aug 7, 2026**).
 - **Slides restyle**: rebuild the deck onto `slides/Argonne_Powerpoint_Template.pptx`
   (user-provided official template).
 - **Real-machine shaping**: the current flux-surface figure is the manufactured
