@@ -1,0 +1,45 @@
+From b7d939768efc91ce1a39c3f9dab9f9190a690f5b Mon Sep 17 00:00:00 2001
+From: Sarthak Sharma <sarthak.sharma@anl.gov>
+Date: Thu, 23 Jul 2026 11:21:05 -0500
+Subject: [PATCH 2/3] getScriptPort: resolve server scripts CWD-independently
+ (absolute path)
+
+Search the directory this module lives in (where the *_mcp_server.py scripts
+are) instead of the process CWD, and return an absolute path. Without this, the
+stdio sub-server spawn used by the code-generator/orchestrator agents only worked
+when the caller ran from the petsc_mcp_servers directory; from any other CWD the
+glob found nothing, generateServer fell back to a remote HTTP URL, the inner
+Claude got no PETSc compile-run tools, and code could be generated but never
+compiled/run. Falls back to a CWD glob for backward compatibility.
+
+Co-Authored-By: Claude Opus 4.8 (1M context) <noreply@anthropic.com>
+---
+ petscmcp.py | 10 ++++++++--
+ 1 file changed, 8 insertions(+), 2 deletions(-)
+
+diff --git a/petscmcp.py b/petscmcp.py
+index 736ef57..3e0e062 100644
+--- a/petscmcp.py
++++ b/petscmcp.py
+@@ -367,10 +367,16 @@ def getScriptPort(servername: str):
+   servername = os.path.basename(servername)
+   if servername.find('_mcp_client.py') > -1: servername = servername[:servername.find('_mcp_client.py')]
+   if servername.find('_mcp_server.py') > -1: servername = servername[:servername.find('_mcp_server.py')]
+-  scripts = glob.glob('*' + servername + '_mcp_server.py')
++  # Search the directory this module lives in (where the *_mcp_server.py scripts sit),
++  # not the current working directory, and return an ABSOLUTE path so stdio spawns work
++  # regardless of the caller's CWD. Fall back to CWD for backward compatibility.
++  here = os.path.dirname(os.path.abspath(__file__))
++  scripts = glob.glob(os.path.join(here, '*' + servername + '_mcp_server.py'))
++  if len(scripts) == 0:
++    scripts = glob.glob('*' + servername + '_mcp_server.py')
+   if len(scripts) == 0:
+     return (None, None)
+-  script = os.path.basename(scripts[0])
++  script = os.path.abspath(scripts[0])
+   with open(script) as fd:
+     scriptinfo = fd.read()
+     l = scriptinfo.find('petscmcp.servermainlast(transport, ')
+-- 
+2.43.0
+

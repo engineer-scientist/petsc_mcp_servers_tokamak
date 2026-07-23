@@ -26,6 +26,8 @@ slides/      Argonne summer-2026 intern presentation (WIP)
 
 - **What is this / how does it work** → `docs/ARCHITECTURE.md`
 - **How to run it on this machine** → `docs/ENVIRONMENT.md`
+- **How to run the workflow end to end** → `docs/USAGE.md`
+- **Changes we made to the multi-agent system** → `docs/AGENT_SYSTEM_CHANGES.md` (+ `patches/`)
 - **Where are we / what's next** → `docs/SESSION_LOG.md` (newest at bottom)
 - **The plan** → `docs/ROADMAP.md`
 

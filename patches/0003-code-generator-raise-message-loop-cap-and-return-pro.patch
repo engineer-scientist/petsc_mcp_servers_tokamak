@@ -1,0 +1,39 @@
+From 3c5c41179439bbd69eecb34404592900fa94d73a Mon Sep 17 00:00:00 2001
+From: Sarthak Sharma <sarthak.sharma@anl.gov>
+Date: Thu, 23 Jul 2026 11:30:10 -0500
+Subject: [PATCH 3/3] code generator: raise message-loop cap and return
+ promptly after first success
+
+A thorough agent that also tests multiple MPI rank counts and grid sizes can
+exhaust the 30-message loop cap before emitting the final JSON, so a correct,
+compiling, verified program is reported as a failure. Raise the cap to 80 and
+instruct the agent to return the code+output as soon as it compiles and runs
+successfully once (no extra rank/grid sweeps).
+
+Co-Authored-By: Claude Opus 4.8 (1M context) <noreply@anthropic.com>
+---
+ petsc_claude_code_generator_mcp_server.py | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/petsc_claude_code_generator_mcp_server.py b/petsc_claude_code_generator_mcp_server.py
+index c0f05a8..01ddc1b 100644
+--- a/petsc_claude_code_generator_mcp_server.py
++++ b/petsc_claude_code_generator_mcp_server.py
+@@ -36,12 +36,12 @@ async def generate_code_async(specification: str) -> dict:
+   if petscmcp.defaultModel:
+     _opts['model'] = petscmcp.defaultModel
+   options = claude_agent_sdk.ClaudeAgentOptions(**_opts)
+-  cntlimit = 30
++  cntlimit = 80
+   cnt = 0
+   tool_cnt = 0
+   async with claude_agent_sdk.ClaudeSDKClient(options = options) as client:
+     results = {}
+-    query = 'Write and compile a PETSc for me that ' + specification + ' using the PETSc compile-run MCP server available to you. Do **not** use the Bash or Write tool! Verify you have access to the PETSc compile-run MCP server (there are ' + str(len(sub_servers)) + ' MCP server(s) available to you); if you do not have the compile-run server then exit immediately. Always use the latest PETSc coding style which wraps the PETSc function calls inside the PetscCall() macro and does not use the old ierr = approach. Do not use %D as a formatting argument in printf() and related calls. Once the code compiles and runs return the code and its output as a JSON dictionary with two keys, code and output in a TextBlock'
++    query = 'Write and compile a PETSc for me that ' + specification + ' using the PETSc compile-run MCP server available to you. Do **not** use the Bash or Write tool! Verify you have access to the PETSc compile-run MCP server (there are ' + str(len(sub_servers)) + ' MCP server(s) available to you); if you do not have the compile-run server then exit immediately. Always use the latest PETSc coding style which wraps the PETSc function calls inside the PetscCall() macro and does not use the old ierr = approach. Do not use %D as a formatting argument in printf() and related calls. As soon as the code compiles and runs successfully ONE time, immediately stop and return the code and its output as a JSON dictionary with two keys, code and output, in a TextBlock. Do not test additional numbers of MPI ranks or additional grid sizes once it has run successfully once'
+     while not results:
+       await client.query(query)
+       async for message in client.receive_response():
+-- 
+2.43.0
+
