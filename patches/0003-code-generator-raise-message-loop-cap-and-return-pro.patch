@@ -1,7 +1,7 @@
 From 3c5c41179439bbd69eecb34404592900fa94d73a Mon Sep 17 00:00:00 2001
 From: Sarthak Sharma <sarthak.sharma@anl.gov>
 Date: Thu, 23 Jul 2026 11:30:10 -0500
-Subject: [PATCH 3/3] code generator: raise message-loop cap and return
+Subject: [PATCH 3/4] code generator: raise message-loop cap and return
  promptly after first success
 
 A thorough agent that also tests multiple MPI rank counts and grid sizes can

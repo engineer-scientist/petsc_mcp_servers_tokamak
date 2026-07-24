@@ -1,0 +1,397 @@
+pde_modeling_mcp_server.py servermainfirst() successfully completed setting up logging with stdio
+servermainlast() starting up stdio based server
+AssistantMessage from Claude: # Grad–Shafranov Equilibrium Model
+
+The name of the PDE is [Grad-Shafranov equation].
+
+the PDE is not time-dependent.
+
+Below, the elliptic (Grad–Shafranov) operator is written as
+$\Delta^\* \psi = R\,\partial_R\!\big(\tfrac{1}{R}\partial_R\psi\big) + \partial_{ZZ}\psi = \partial_{RR}\psi - \tfrac{1}{R}\partial_R\psi + \partial_{ZZ}\psi$,
+and Solov'ev profiles are used so that $\mu_0\,dp/d\psi = C_1$ (const) and $F\,dF/d\psi = C_2$ (const), giving the explicit source $f(R,Z,\psi)=C_1 R^2 + C_2$ (general nonlinear source $f=\mu_0 R^2 p'(\psi)+F F'(\psi)$ shown for completeness). The weak form is obtained by testing with $v/R$, which makes the operator self-adjoint with weight $1/R$.
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Grad-Shafranov Equilibrium PDE</title>
+<script>
+  window.MathJax = {
+    tex: { inlineMath: [['\\(','\\)']], displayMath: [['$$','$$'],['\\[','\\]']] }
+  };
+</script>
+<script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+<script id="MathJax-script" async
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+</head>
+<body>
+<h1>Grad&ndash;Shafranov Equilibrium of an Axisymmetric Tokamak</h1>
+
+<p>The name of the PDE is <strong>Grad&ndash;Shafranov equation</strong>.
+The PDE is <strong>not time-dependent</strong> (it is an MHD equilibrium equation).</p>
+
+<h2>Grad&ndash;Shafranov operator</h2>
+<p>
+$$
+\Delta^{*}\psi \;\equiv\; R\,\frac{\partial}{\partial R}\!\left(\frac{1}{R}\frac{\partial \psi}{\partial R}\right)
++ \frac{\partial^{2}\psi}{\partial Z^{2}}
+\;=\; \frac{\partial^{2}\psi}{\partial R^{2}} - \frac{1}{R}\frac{\partial \psi}{\partial R}
++ \frac{\partial^{2}\psi}{\partial Z^{2}}.
+$$
+</p>
+
+<h2>Strong form</h2>
+<p>Find the poloidal flux \(\psi(R,Z)\) on the cross-section \(\Omega\subset\{R>0\}\) such that</p>
+<p>
+$$
+\Delta^{*}\psi
+= -\,\mu_{0}\,R^{2}\,\frac{dp}{d\psi} \;-\; F\,\frac{dF}{d\psi}
+\;\equiv\; -\,f(R,Z,\psi)\qquad\text{in }\Omega,
+$$
+$$
+\psi = 0 \qquad\text{on }\partial\Omega .
+$$
+</p>
+<p>With Solov'ev (linear) profiles \( \mu_{0}\,dp/d\psi = C_{1}\), \( F\,dF/d\psi = C_{2}\):</p>
+<p>
+$$
+\frac{\partial^{2}\psi}{\partial R^{2}} - \frac{1}{R}\frac{\partial \psi}{\partial R}
++ \frac{\partial^{2}\psi}{\partial Z^{2}}
+= -\left(C_{1}R^{2} + C_{2}\right)\quad\text{in }\Omega,\qquad \psi=0 \text{ on } \partial\Omega .
+$$
+</p>
+
+<h2>Weak form</h2>
+<p>
+Multiply by \(v/R\) with \(v\in V_{0}=\{v\in H^{1}(\Omega):v=0\text{ on }\partial\Omega\}\),
+integrate over \(\Omega\) with \(dx=dR\,dZ\), and integrate by parts. The weighted
+boundary terms vanish since \(v=0\) on \(\partial\Omega\). Find
+\(\psi\in H^{1}(\Omega)\), \(\psi=0\) on \(\partial\Omega\), such that for all \(v\in V_{0}\):
+</p>
+<p>
+$$
+\int_{\Omega}\frac{1}{R}\,\nabla\psi\cdot\nabla v \; dx
+=\int_{\Omega}\frac{1}{R}\,\Big(\mu_{0}R^{2}\,p'(\psi)+F(\psi)F'(\psi)\Big)\,v\;dx .
+$$
+</p>
+<p>Solov'ev specialization (\(f=C_{1}R^{2}+C_{2}\)):</p>
+<p>
+$$
+\int_{\Omega}\frac{1}{R}\,\nabla\psi\cdot\nabla v \; dx
+=\int_{\Omega}\Big(C_{1}R+\frac{C_{2}}{R}\Big)\,v\;dx
+\qquad\forall v\in V_{0}.
+$$
+</p>
+
+<h2>Domain (plasma boundary)</h2>
+<p>
+Rectangular cross-section \(\Omega=[R_{\mathrm{in}},R_{\mathrm{out}}]\times[Z_{\min},Z_{\max}]\),
+or a D-shaped boundary (Miller parametrization)
+\( R(\theta)=R_{0}+a\cos(\theta+\delta\sin\theta),\; Z(\theta)=\kappa\,a\sin\theta \),
+with minor radius \(a\), elongation \(\kappa\), triangularity \(\delta\); \(\psi=0\) on this curve.
+</p>
+</body>
+</html>
+```
+
+```latex
+% Grad-Shafranov equilibrium PDE (axisymmetric tokamak)
+% Name: Grad-Shafranov equation.  Time-dependent: NO (equilibrium).
+
+% Grad-Shafranov operator
+\[
+\Delta^{*}\psi \;\equiv\; R\,\frac{\partial}{\partial R}\!\left(\frac{1}{R}\frac{\partial \psi}{\partial R}\right)
++ \frac{\partial^{2}\psi}{\partial Z^{2}}
+= \frac{\partial^{2}\psi}{\partial R^{2}} - \frac{1}{R}\frac{\partial \psi}{\partial R}
++ \frac{\partial^{2}\psi}{\partial Z^{2}}.
+\]
+
+% ---------- Strong form ----------
+% Find psi(R,Z) on Omega in {R>0}:
+\[
+\Delta^{*}\psi
+= -\,\mu_{0}\,R^{2}\,\frac{dp}{d\psi} \;-\; F\,\frac{dF}{d\psi}
+\;\equiv\; -\,f(R,Z,\psi)\qquad\text{in }\Omega,
+\qquad \psi = 0 \ \text{ on }\ \partial\Omega .
+\]
+
+% Solov'ev (linear) profiles:  mu0 dp/dpsi = C1,  F dF/dpsi = C2
+\[
+\frac{\partial^{2}\psi}{\partial R^{2}} - \frac{1}{R}\frac{\partial \psi}{\partial R}
++ \frac{\partial^{2}\psi}{\partial Z^{2}}
+= -\left(C_{1}R^{2} + C_{2}\right)\quad\text{in }\Omega,
+\qquad \psi=0 \ \text{ on }\ \partial\Omega .
+\]
+
+% ---------- Weak form ----------
+% Test with v/R, v in V0 = { v in H^1(Omega) : v = 0 on dOmega }, dx = dR dZ.
+\[
+\int_{\Omega}\frac{1}{R}\,\nabla\psi\cdot\nabla v \; dx
+=\int_{\Omega}\frac{1}{R}\,\Big(\mu_{0}R^{2}\,p'(\psi)+F(\psi)F'(\psi)\Big)\,v\;dx
+\qquad\forall\, v\in V_{0}.
+\]
+
+% Solov'ev specialization ( f = C1 R^2 + C2 ):
+\[
+\int_{\Omega}\frac{1}{R}\,\nabla\psi\cdot\nabla v \; dx
+=\int_{\Omega}\Big(C_{1}R+\frac{C_{2}}{R}\Big)\,v\;dx
+\qquad\forall\, v\in V_{0}.
+\]
+
+% Boundary / domain:
+% Rectangular:  Omega = [R_in, R_out] x [Z_min, Z_max].
+% D-shaped (Miller):  R = R0 + a cos(theta + delta sin theta),  Z = kappa a sin theta.
+```
+
+```python
+# Grad-Shafranov equilibrium in an axisymmetric tokamak (FEniCS / UFL)
+# Name: Grad-Shafranov equation.   Time-dependent: NO (steady equilibrium).
+#
+# Weak form (weight 1/R):
+#   Find psi in V, psi = 0 on dOmega, such that for all v in V0:
+#     integral( (1/R) * dot(grad(psi), grad(v)) ) dx
+#       = integral( (1/R) * f(R,Z,psi) * v ) dx
+#   with f = mu0 * R^2 * p'(psi) + F(psi)*F'(psi)   (general)
+#        f = C1 * R^2 + C2                           (Solov'ev, linear)
+
+from fenics import *
+
+# ---- Domain: rectangular tokamak cross-section (R>0) ----
+R_in, R_out = 0.5, 1.5
+Z_min, Z_max = -1.0, 1.0
+mesh = RectangleMesh(Point(R_in, Z_min), Point(R_out, Z_max), 96, 96)
+# (For a D-shaped boundary, build the mesh with mshr from the Miller curve
+#  R = R0 + a*cos(t + delta*sin t), Z = kappa*a*sin t, and impose psi=0 on it.)
+
+# ---- Function space and Dirichlet BC: psi = 0 on the plasma boundary ----
+V  = FunctionSpace(mesh, "P", 1)
+bc = DirichletBC(V, Constant(0.0), "on_boundary")
+
+# ---- Coordinates and Solov'ev source coefficients ----
+xR = SpatialCoordinate(mesh)
+R, Z = xR[0], xR[1]
+
+mu0 = Constant(4.0e-7 * pi)   # vacuum permeability
+C1  = Constant(1.0)           # mu0 * dp/dpsi   (constant)  -> Solov'ev
+C2  = Constant(1.0)           # F * dF/dpsi     (constant)  -> Solov'ev
+
+# Explicit Solov'ev source f(R,Z,psi) = C1 R^2 + C2  (independent of psi -> linear)
+def f_source(psi):
+    return C1 * R**2 + C2
+    # General nonlinear profiles instead would read, e.g.:
+    #   dp_dpsi = ...(psi);  FdF = ...(psi)
+    #   return mu0 * R**2 * dp_dpsi + FdF
+
+# ================= UFL: linear (Solov'ev) formulation =================
+psi = TrialFunction(V)
+v   = TestFunction(V)
+
+a = (1.0 / R) * dot(grad(psi), grad(v)) * dx           # bilinear form
+L = (1.0 / R) * f_source(psi=None) * v * dx            # linear form (f indep. of psi)
+
+psi_h = Function(V, name="psi")
+solve(a == L, psi_h, bc)
+
+# ============ UFL: general nonlinear residual (if f = f(psi)) ============
+# psi_n = Function(V, name="psi")
+# v     = TestFunction(V)
+# F_res = (1.0 / R) * dot(grad(psi_n), grad(v)) * dx \
+#       - (1.0 / R) * f_source(psi_n) * v * dx
+# solve(F_res == 0, psi_n, bc)
+```
+Found the PDE name Grad-Shafranov equation
+Located body of triple tick
+
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Grad-Shafranov Equilibrium PDE</title>
+<script>
+  window.MathJax = {
+    tex: { inlineMath: [['\\(','\\)']], displayMath: [['$$','$$'],['\\[','\\]']] }
+  };
+</script>
+<script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+<script id="MathJax-script" async
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+</head>
+<body>
+<h1>Grad&ndash;Shafranov Equilibrium of an Axisymmetric Tokamak</h1>
+
+<p>The name of the PDE is <strong>Grad&ndash;Shafranov equation</strong>.
+The PDE is <strong>not time-dependent</strong> (it is an MHD equilibrium equation).</p>
+
+<h2>Grad&ndash;Shafranov operator</h2>
+<p>
+$$
+\Delta^{*}\psi \;\equiv\; R\,\frac{\partial}{\partial R}\!\left(\frac{1}{R}\frac{\partial \psi}{\partial R}\right)
++ \frac{\partial^{2}\psi}{\partial Z^{2}}
+\;=\; \frac{\partial^{2}\psi}{\partial R^{2}} - \frac{1}{R}\frac{\partial \psi}{\partial R}
++ \frac{\partial^{2}\psi}{\partial Z^{2}}.
+$$
+</p>
+
+<h2>Strong form</h2>
+<p>Find the poloidal flux \(\psi(R,Z)\) on the cross-section \(\Omega\subset\{R>0\}\) such that</p>
+<p>
+$$
+\Delta^{*}\psi
+= -\,\mu_{0}\,R^{2}\,\frac{dp}{d\psi} \;-\; F\,\frac{dF}{d\psi}
+\;\equiv\; -\,f(R,Z,\psi)\qquad\text{in }\Omega,
+$$
+$$
+\psi = 0 \qquad\text{on }\partial\Omega .
+$$
+</p>
+<p>With Solov'ev (linear) profiles \( \mu_{0}\,dp/d\psi = C_{1}\), \( F\,dF/d\psi = C_{2}\):</p>
+<p>
+$$
+\frac{\partial^{2}\psi}{\partial R^{2}} - \frac{1}{R}\frac{\partial \psi}{\partial R}
++ \frac{\partial^{2}\psi}{\partial Z^{2}}
+= -\left(C_{1}R^{2} + C_{2}\right)\quad\text{in }\Omega,\qquad \psi=0 \text{ on } \partial\Omega .
+$$
+</p>
+
+<h2>Weak form</h2>
+<p>
+Multiply by \(v/R\) with \(v\in V_{0}=\{v\in H^{1}(\Omega):v=0\text{ on }\partial\Omega\}\),
+integrate over \(\Omega\) with \(dx=dR\,dZ\), and integrate by parts. The weighted
+boundary terms vanish since \(v=0\) on \(\partial\Omega\). Find
+\(\psi\in H^{1}(\Omega)\), \(\psi=0\) on \(\partial\Omega\), such that for all \(v\in V_{0}\):
+</p>
+<p>
+$$
+\int_{\Omega}\frac{1}{R}\,\nabla\psi\cdot\nabla v \; dx
+=\int_{\Omega}\frac{1}{R}\,\Big(\mu_{0}R^{2}\,p'(\psi)+F(\psi)F'(\psi)\Big)\,v\;dx .
+$$
+</p>
+<p>Solov'ev specialization (\(f=C_{1}R^{2}+C_{2}\)):</p>
+<p>
+$$
+\int_{\Omega}\frac{1}{R}\,\nabla\psi\cdot\nabla v \; dx
+=\int_{\Omega}\Big(C_{1}R+\frac{C_{2}}{R}\Big)\,v\;dx
+\qquad\forall v\in V_{0}.
+$$
+</p>
+
+<h2>Domain (plasma boundary)</h2>
+<p>
+Rectangular cross-section \(\Omega=[R_{\mathrm{in}},R_{\mathrm{out}}]\times[Z_{\min},Z_{\max}]\),
+or a D-shaped boundary (Miller parametrization)
+\( R(\theta)=R_{0}+a\cos(\theta+\delta\sin\theta),\; Z(\theta)=\kappa\,a\sin\theta \),
+with minor radius \(a\), elongation \(\kappa\), triangularity \(\delta\); \(\psi=0\) on this curve.
+</p>
+</body>
+</html>
+
+Located body of triple tick
+
+
+% Grad-Shafranov equilibrium PDE (axisymmetric tokamak)
+% Name: Grad-Shafranov equation.  Time-dependent: NO (equilibrium).
+
+% Grad-Shafranov operator
+\[
+\Delta^{*}\psi \;\equiv\; R\,\frac{\partial}{\partial R}\!\left(\frac{1}{R}\frac{\partial \psi}{\partial R}\right)
++ \frac{\partial^{2}\psi}{\partial Z^{2}}
+= \frac{\partial^{2}\psi}{\partial R^{2}} - \frac{1}{R}\frac{\partial \psi}{\partial R}
++ \frac{\partial^{2}\psi}{\partial Z^{2}}.
+\]
+
+% ---------- Strong form ----------
+% Find psi(R,Z) on Omega in {R>0}:
+\[
+\Delta^{*}\psi
+= -\,\mu_{0}\,R^{2}\,\frac{dp}{d\psi} \;-\; F\,\frac{dF}{d\psi}
+\;\equiv\; -\,f(R,Z,\psi)\qquad\text{in }\Omega,
+\qquad \psi = 0 \ \text{ on }\ \partial\Omega .
+\]
+
+% Solov'ev (linear) profiles:  mu0 dp/dpsi = C1,  F dF/dpsi = C2
+\[
+\frac{\partial^{2}\psi}{\partial R^{2}} - \frac{1}{R}\frac{\partial \psi}{\partial R}
++ \frac{\partial^{2}\psi}{\partial Z^{2}}
+= -\left(C_{1}R^{2} + C_{2}\right)\quad\text{in }\Omega,
+\qquad \psi=0 \ \text{ on }\ \partial\Omega .
+\]
+
+% ---------- Weak form ----------
+% Test with v/R, v in V0 = { v in H^1(Omega) : v = 0 on dOmega }, dx = dR dZ.
+\[
+\int_{\Omega}\frac{1}{R}\,\nabla\psi\cdot\nabla v \; dx
+=\int_{\Omega}\frac{1}{R}\,\Big(\mu_{0}R^{2}\,p'(\psi)+F(\psi)F'(\psi)\Big)\,v\;dx
+\qquad\forall\, v\in V_{0}.
+\]
+
+% Solov'ev specialization ( f = C1 R^2 + C2 ):
+\[
+\int_{\Omega}\frac{1}{R}\,\nabla\psi\cdot\nabla v \; dx
+=\int_{\Omega}\Big(C_{1}R+\frac{C_{2}}{R}\Big)\,v\;dx
+\qquad\forall\, v\in V_{0}.
+\]
+
+% Boundary / domain:
+% Rectangular:  Omega = [R_in, R_out] x [Z_min, Z_max].
+% D-shaped (Miller):  R = R0 + a cos(theta + delta sin theta),  Z = kappa a sin theta.
+
+Located body of triple tick
+
+
+# Grad-Shafranov equilibrium in an axisymmetric tokamak (FEniCS / UFL)
+# Name: Grad-Shafranov equation.   Time-dependent: NO (steady equilibrium).
+#
+# Weak form (weight 1/R):
+#   Find psi in V, psi = 0 on dOmega, such that for all v in V0:
+#     integral( (1/R) * dot(grad(psi), grad(v)) ) dx
+#       = integral( (1/R) * f(R,Z,psi) * v ) dx
+#   with f = mu0 * R^2 * p'(psi) + F(psi)*F'(psi)   (general)
+#        f = C1 * R^2 + C2                           (Solov'ev, linear)
+
+from fenics import *
+
+# ---- Domain: rectangular tokamak cross-section (R>0) ----
+R_in, R_out = 0.5, 1.5
+Z_min, Z_max = -1.0, 1.0
+mesh = RectangleMesh(Point(R_in, Z_min), Point(R_out, Z_max), 96, 96)
+# (For a D-shaped boundary, build the mesh with mshr from the Miller curve
+#  R = R0 + a*cos(t + delta*sin t), Z = kappa*a*sin t, and impose psi=0 on it.)
+
+# ---- Function space and Dirichlet BC: psi = 0 on the plasma boundary ----
+V  = FunctionSpace(mesh, "P", 1)
+bc = DirichletBC(V, Constant(0.0), "on_boundary")
+
+# ---- Coordinates and Solov'ev source coefficients ----
+xR = SpatialCoordinate(mesh)
+R, Z = xR[0], xR[1]
+
+mu0 = Constant(4.0e-7 * pi)   # vacuum permeability
+C1  = Constant(1.0)           # mu0 * dp/dpsi   (constant)  -> Solov'ev
+C2  = Constant(1.0)           # F * dF/dpsi     (constant)  -> Solov'ev
+
+# Explicit Solov'ev source f(R,Z,psi) = C1 R^2 + C2  (independent of psi -> linear)
+def f_source(psi):
+    return C1 * R**2 + C2
+    # General nonlinear profiles instead would read, e.g.:
+    #   dp_dpsi = ...(psi);  FdF = ...(psi)
+    #   return mu0 * R**2 * dp_dpsi + FdF
+
+# ================= UFL: linear (Solov'ev) formulation =================
+psi = TrialFunction(V)
+v   = TestFunction(V)
+
+a = (1.0 / R) * dot(grad(psi), grad(v)) * dx           # bilinear form
+L = (1.0 / R) * f_source(psi=None) * v * dx            # linear form (f indep. of psi)
+
+psi_h = Function(V, name="psi")
+solve(a == L, psi_h, bc)
+
+# ============ UFL: general nonlinear residual (if f = f(psi)) ============
+# psi_n = Function(V, name="psi")
+# v     = TestFunction(V)
+# F_res = (1.0 / R) * dot(grad(psi_n), grad(v)) * dx \
+#       - (1.0 / R) * f_source(psi_n) * v * dx
+# solve(F_res == 0, psi_n, bc)
+

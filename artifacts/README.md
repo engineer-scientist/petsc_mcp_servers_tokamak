@@ -47,3 +47,19 @@ version-controlled copy of the generated solver is `grad_shafranov.c` in each ru
 2. Follow the hand-offs: `model_input.txt` → `model.json`; `na_input.txt` → `na.json`;
    `codegen_input.txt` → `codegen_transcript.log` → `grad_shafranov.c` + `codegen_output.txt`.
 3. Cross-check the physics in `verification.json` and the figures.
+
+## `orchestrator-*/` — built-in LLM orchestrator demos
+
+The `run-*/` dirs above come from our project-owned driver (`src/orchestrate_tokamak.py`),
+which sequences the agents from Python. The `orchestrator-*/` dirs are a different thing: the
+**shipped** `orchestrator_mcp_server` LLM agent driving the same four servers, where an inner
+Claude decides the sequence itself. Each has its own `README.md`, `transcript.log` (the
+authoritative record), the generated `grad_shafranov.c`, and `server_logs/` (per-sub-server
+stdio logs).
+
+- **`orchestrator-20260724/`** — honest *as-shipped* run. Drove all four servers correctly and
+  produced a compiling, converged DMPLEX+PetscFE solver, but tripped the upstream
+  `cntlimit = 35` during its final verification run and returned a (false) `failure_message`.
+- **`orchestrator-20260724-fixed/`** — same run after the analogous cap fix
+  (`docs/AGENT_SYSTEM_CHANGES.md` #6, `patches/0004`): completes cleanly with
+  `I have completed the orchestration` and `FINAL_RESULT: {}` (success).

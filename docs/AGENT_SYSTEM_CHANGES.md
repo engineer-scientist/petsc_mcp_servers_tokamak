@@ -14,9 +14,10 @@ documents exactly what changed versus the original code.
 - **Portable patches** (apply to a fresh clone with `git am patches/*.patch`):
   `patches/0001-Portability-graceful-degradation-*.patch`,
   `patches/0002-getScriptPort-*.patch`,
-  `patches/0003-code-generator-*.patch` (in *this* repo).
+  `patches/0003-code-generator-*.patch`,
+  `patches/0004-orchestrator-*.patch` (in *this* repo).
 
-**Scope:** 2 files, +38 / −7 lines. **No change to the scientific behavior** of the
+**Scope:** 3 files, +40 / −9 lines. **No change to the scientific behavior** of the
 specialist agents — the Mathematical Modeling and Numerical Analysis prompts/logic are
 untouched; these are infrastructure fixes. **Every change is backward-compatible** (default
 behavior is preserved when the relevant condition/host matches the original assumptions).
@@ -28,6 +29,7 @@ behavior is preserved when the relevant condition/host matches the original assu
 | 3 | `petscmcp.py` (new) | `documentationAvailable()`, `ragAvailable()` probes | detect optional services |
 | 4 | `petsc_claude_code_generator_mcp_server.py` · `generate_code_async` | include only **available** sub-servers; report true server count in the prompt | docs/RAG absent here |
 | 5 | `petsc_claude_code_generator_mcp_server.py` · `generate_code_async` | raise message-loop cap `30 → 80`; tell the agent to return after the **first** successful compile+run | thorough agent ran out of loop budget |
+| 6 | `orchestrator_mcp_server.py` · `orchestrate_async` | raise iteration cap `35 → 80`; tell the agent to compile+run the program **once** (no degree/rank sweeps) | same failure mode in the top-level orchestrator |
 
 ---
 
@@ -144,6 +146,38 @@ successful compile+run fixed the capture (a later run finished in 21 loops).
 
 **Impact / compatibility.** Purely a budget/prompt change; correct behavior on quick programs
 is unchanged.
+
+## 6. Orchestrator: larger iteration budget + run the program once
+
+**File:** `orchestrator_mcp_server.py` · `orchestrate_async()`
+
+```python
+# before
+cntlimit = 35
+# "... then use the PETSc compile and run MCP server. When you have completed the
+#      orchestration send back the message "I have completed the orchestration"."
+# after
+cntlimit = 80
+# "... then use the PETSc compile and run MCP server to compile and run the generated
+#      program exactly once (do not test additional MPI rank counts, polynomial degrees,
+#      or grid sizes). As soon as the program has compiled and run successfully one time,
+#      immediately send back the message "I have completed the orchestration"."
+```
+
+**Why.** This is the same failure mode as change #5, one level up. The orchestrator counts
+**every** streamed SDK message — assistant text, each tool-use, and each tool-result — against
+one `cntlimit`. A faithful four-stage run (modeling → numerical analysis → code generation →
+compile/run), in which the inner agent also retried a numerical-analysis tool and then
+announced it would sweep P1/P2 elements and 1/2 MPI ranks, hit 35 messages **exactly as it
+issued its first `run_executable`**. Observed directly in this project
+(`artifacts/orchestrator-20260724/`): the generated DMPLEX + PetscFE solver **compiled
+cleanly and had already converged** (`CONVERGED_FNORM_RELATIVE`, 741 DOFs), yet the run
+returned `{'failure_message': 'Too many iterations 36 of orchestration.'}`. Raising the cap to
+80 and telling the agent to run once let the very next run finish cleanly with
+`I have completed the orchestration` (`artifacts/orchestrator-20260724-fixed/`).
+
+**Impact / compatibility.** Purely a budget/prompt change; the four-stage sequence and the
+`bypassPermissions` fan-out are unchanged.
 
 ---
 

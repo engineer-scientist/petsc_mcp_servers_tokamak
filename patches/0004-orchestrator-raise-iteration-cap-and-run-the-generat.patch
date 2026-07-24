@@ -1,0 +1,44 @@
+From 1fcfd95266a5cab69fe7d0b8f19903ef76a898d4 Mon Sep 17 00:00:00 2001
+From: Sarthak Sharma <sarthak.sharma@compute-386-08.cels.anl.gov>
+Date: Fri, 24 Jul 2026 16:49:32 -0500
+Subject: [PATCH 4/4] orchestrator: raise iteration cap and run the generated
+ program only once
+
+The orchestrator counts every SDK message (assistant text, tool-use, and
+tool-result) against a single cntlimit=35 budget. A faithful four-stage run
+(model -> numerical analysis -> code generation -> compile/run), where the
+inner agent also retries a tool and then intends to sweep multiple polynomial
+degrees and MPI rank counts, exhausts 35 messages just as it issues its first
+run_executable -- so a pipeline that compiled cleanly and already converged is
+reported as {'failure_message': 'Too many iterations ...'}. Raise the cap to 80
+(matching the code generator's fix) and instruct the agent to compile and run
+the generated program exactly once, then finish -- no extra degree/rank sweeps.
+
+Co-Authored-By: Claude Opus 4.8 (1M context) <noreply@anthropic.com>
+---
+ orchestrator_mcp_server.py | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/orchestrator_mcp_server.py b/orchestrator_mcp_server.py
+index f4e696c..f355a6f 100644
+--- a/orchestrator_mcp_server.py
++++ b/orchestrator_mcp_server.py
+@@ -29,13 +29,13 @@ async def orchestrate_async(specification: str) -> dict:
+ #              model="claudeopus46"
+             )
+   # Add here a check that the tools are running properly before passing to Claude?
+-  cntlimit = 35
++  cntlimit = 80
+   cnt = 0
+   tool_cnt = 0
+   results = {}
+   async with claude_agent_sdk.ClaudeSDKClient(options = options) as client:
+     done = False
+-    query = 'Orchestrate the development and run a PDE simulator for ' + specification + ' using the four MCP servers available to you. Do **not** use the Bash or Write tool! Verify you have access to four MCP servers, if you do not then exit immediately. Do not do any modeling or code generation yourself; always use the MCP tools for these purposes. First use the PDE modeling MCP server, then use the Numerical analysis specialist MCP server, then use the Code generator MCP server, then use the PETSc compile and run MCP server. When you have completed the orchestration send back the message "I have completed the orchestration".'
++    query = 'Orchestrate the development and run a PDE simulator for ' + specification + ' using the four MCP servers available to you. Do **not** use the Bash or Write tool! Verify you have access to four MCP servers, if you do not then exit immediately. Do not do any modeling or code generation yourself; always use the MCP tools for these purposes. First use the PDE modeling MCP server, then use the Numerical analysis specialist MCP server, then use the Code generator MCP server, then use the PETSc compile and run MCP server to compile and run the generated program exactly once (do not test additional MPI rank counts, polynomial degrees, or grid sizes). As soon as the program has compiled and run successfully one time, immediately send back the message "I have completed the orchestration".'
+     while not done:
+       await client.query(query)
+       async for message in client.receive_response():
+-- 
+2.43.0
+

@@ -67,16 +67,28 @@ human-effort table for the poster and slides).
 
 ## 4. (Optional) the built-in orchestrator agent
 
-A faithfulness demo of the shipped LLM orchestrator driving the same servers:
+A faithfulness demo of the shipped LLM orchestrator driving the same servers, where an inner
+Claude decides the sequence itself (rather than our Python driver doing it):
 
 ```bash
-cd $MCP
-env PYTHONPATH=$MCP PETSC_MCP_SERVERS_STDIO=True $PYV -c \
+cd $MCP                                  # branch tokamak-improvements
+env PYTHONPATH=$MCP PETSC_MCP_SERVERS_STDIO=True $PYV -u -c \
  "import asyncio, orchestrator_mcp_server as o; \
   print(asyncio.run(o.orchestrate_async('the Grad-Shafranov equilibrium for a tokamak plasma')))"
 ```
 
-(See `docs/SESSION_LOG.md` for status of this demo.)
+Success prints `I have completed the orchestration` and returns `{}` (an empty results dict;
+a `{'failure_message': ...}` return means it gave up). It takes ~10–13 min: it nests deeply
+(orchestrator → inner Claude → 4 stdio sub-servers, and the code generator spawns yet another
+Claude). Ran end to end on 2026-07-24 — the agent independently produced a **DMPLEX + PetscFE**
+Grad–Shafranov (Solov'ev) solver that compiled and ran (`||psi||_2 = 2.04156`, 225 DOFs).
+Captured under `artifacts/orchestrator-20260724-fixed/` (and the as-shipped run that exposed
+the iteration-cap bug under `artifacts/orchestrator-20260724/`). See those dirs' `README.md`
+and `docs/AGENT_SYSTEM_CHANGES.md` change #6.
+
+> Requires the orchestrator cap fix (change #6); an unpatched clone will report a false
+> "Too many iterations" failure right after the code compiles. Apply `patches/0004-*.patch`
+> or use branch `tokamak-improvements`.
 
 ## Troubleshooting
 

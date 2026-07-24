@@ -1,7 +1,7 @@
 From b7d939768efc91ce1a39c3f9dab9f9190a690f5b Mon Sep 17 00:00:00 2001
 From: Sarthak Sharma <sarthak.sharma@anl.gov>
 Date: Thu, 23 Jul 2026 11:21:05 -0500
-Subject: [PATCH 2/3] getScriptPort: resolve server scripts CWD-independently
+Subject: [PATCH 2/4] getScriptPort: resolve server scripts CWD-independently
  (absolute path)
 
 Search the directory this module lives in (where the *_mcp_server.py scripts

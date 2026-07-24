@@ -1,0 +1,351 @@
+pde_modeling_mcp_server.py servermainfirst() successfully completed setting up logging with stdio
+servermainlast() starting up stdio based server
+AssistantMessage from Claude: The name of the PDE is [Grad-Shafranov equation].
+
+the PDE is not time-dependent
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Grad-Shafranov Equilibrium Equation (Solov'ev Model)</title>
+<script>
+  window.MathJax = {
+    tex: { inlineMath: [['$', '$'], ['\\(', '\\)']],
+           displayMath: [['$$', '$$'], ['\\[', '\\]']] }
+  };
+</script>
+<script id="MathJax-script" async
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js">
+</script>
+</head>
+<body>
+<h1>Grad-Shafranov Equilibrium Equation (Solov'ev Linear Source Model)</h1>
+
+<h2>General strong form</h2>
+<p>The poloidal flux $\psi(R,Z)$ in cylindrical coordinates $(R,Z)$ satisfies the
+elliptic Grad-Shafranov equation, where $\Delta^{*}$ is the Grad-Shafranov operator:</p>
+<p>
+$$
+\Delta^{*}\psi \;\equiv\; R\,\frac{\partial}{\partial R}\!\left(\frac{1}{R}\,\frac{\partial \psi}{\partial R}\right)
++ \frac{\partial^{2}\psi}{\partial Z^{2}}
+\;=\; -\,\mu_{0}\,R^{2}\,\frac{dp}{d\psi} \;-\; F\,\frac{dF}{d\psi}.
+$$
+</p>
+
+<h2>Solov'ev linear source model (strong form)</h2>
+<p>Choosing the Solov'ev closure with $\mu_{0}\,dp/d\psi = C_{1}$ and $F\,dF/d\psi = C_{2}$
+makes the right-hand side a simple linear source, yielding a linear elliptic problem:</p>
+<p>
+$$
+R\,\frac{\partial}{\partial R}\!\left(\frac{1}{R}\,\frac{\partial \psi}{\partial R}\right)
++ \frac{\partial^{2}\psi}{\partial Z^{2}}
+\;=\; -\left(C_{1}\,R^{2} + C_{2}\right)
+\qquad \text{in } \Omega \subset \{(R,Z)\}.
+$$
+</p>
+
+<h2>Boundary conditions</h2>
+<p>Homogeneous Dirichlet condition on the plasma boundary $\partial\Omega$:</p>
+<p>
+$$
+\psi = 0 \qquad \text{on } \partial\Omega.
+$$
+</p>
+
+<h2>Weak (variational) form</h2>
+<p>Dividing by $R$ uses the identity
+$\tfrac{1}{R}\Delta^{*}\psi = \nabla\!\cdot\!\big(\tfrac{1}{R}\nabla\psi\big)$,
+where $\nabla=(\partial_R,\partial_Z)$. Multiplying by a test function
+$v \in H_{0}^{1}(\Omega)$, integrating over $\Omega$, and integrating by parts
+(the boundary term vanishes since $v=0$ on $\partial\Omega$):</p>
+<p>
+Find $\psi \in H_{0}^{1}(\Omega)$ such that for all $v \in H_{0}^{1}(\Omega)$:
+$$
+\int_{\Omega} \frac{1}{R}\,\nabla\psi \cdot \nabla v \; dR\,dZ
+\;=\;
+\int_{\Omega} \left(C_{1}\,R + \frac{C_{2}}{R}\right) v \; dR\,dZ.
+$$
+</p>
+
+<p>Bilinear and linear forms:</p>
+<p>
+$$
+a(\psi,v) = \int_{\Omega} \frac{1}{R}\,\nabla\psi \cdot \nabla v \; dR\,dZ,
+\qquad
+L(v) = \int_{\Omega} \left(C_{1}\,R + \frac{C_{2}}{R}\right) v \; dR\,dZ.
+$$
+</p>
+</body>
+</html>
+```
+
+```latex
+% Grad-Shafranov equilibrium equation (Solov'ev linear source model)
+
+% ----- General strong form -----
+% Grad-Shafranov operator:
+\[
+\Delta^{*}\psi \equiv
+R\,\frac{\partial}{\partial R}\!\left(\frac{1}{R}\,\frac{\partial \psi}{\partial R}\right)
++ \frac{\partial^{2}\psi}{\partial Z^{2}}
+= -\,\mu_{0}\,R^{2}\,\frac{dp}{d\psi} - F\,\frac{dF}{d\psi}.
+\]
+
+% ----- Solov'ev linear source model (strong form) -----
+% mu0 dp/dpsi = C1,  F dF/dpsi = C2
+\[
+R\,\frac{\partial}{\partial R}\!\left(\frac{1}{R}\,\frac{\partial \psi}{\partial R}\right)
++ \frac{\partial^{2}\psi}{\partial Z^{2}}
+= -\left(C_{1}\,R^{2} + C_{2}\right)
+\qquad \text{in } \Omega .
+\]
+
+% ----- Boundary condition -----
+\[
+\psi = 0 \qquad \text{on } \partial\Omega .
+\]
+
+% ----- Weak (variational) form -----
+% Using (1/R) Delta* psi = div( (1/R) grad psi ), grad = (d/dR, d/dZ).
+% Find psi in H^1_0(Omega) such that for all v in H^1_0(Omega):
+\[
+\int_{\Omega} \frac{1}{R}\,\nabla\psi \cdot \nabla v \; dR\,dZ
+=
+\int_{\Omega} \left(C_{1}\,R + \frac{C_{2}}{R}\right) v \; dR\,dZ .
+\]
+
+% Bilinear and linear forms:
+\[
+a(\psi,v) = \int_{\Omega} \frac{1}{R}\,\nabla\psi \cdot \nabla v \; dR\,dZ,
+\qquad
+L(v) = \int_{\Omega} \left(C_{1}\,R + \frac{C_{2}}{R}\right) v \; dR\,dZ .
+\]
+```
+
+```python
+# UFL / FEniCS representation of the Grad-Shafranov equilibrium equation
+# (Solov'ev linear source model) on a rectangular (R,Z) cross-section.
+#
+# Strong form:   R d/dR( (1/R) dpsi/dR ) + d^2 psi/dZ^2 = -(C1 R^2 + C2)
+# Divide by R:   div( (1/R) grad psi ) = -(C1 R + C2/R)
+# Weak form:     integral (1/R) grad(psi).grad(v) dx = integral (C1 R + C2/R) v dx
+#
+# Coordinates: x[0] = R (major radius), x[1] = Z (height).
+
+from dolfin import (RectangleMesh, Point, FunctionSpace, TrialFunction,
+                    TestFunction, SpatialCoordinate, Constant, DirichletBC,
+                    Function, solve)
+from ufl import inner, grad, dx
+
+# --- Mesh over the rectangular (R,Z) cross-section domain Omega ---
+R_min, R_max = 0.5, 1.5   # keep R > 0 (axisymmetric domain)
+Z_min, Z_max = -1.0, 1.0
+nx, ny = 64, 64
+mesh = RectangleMesh(Point(R_min, Z_min), Point(R_max, Z_max), nx, ny)
+
+# --- Function space ---
+V = FunctionSpace(mesh, "P", 1)
+
+# --- Trial / test functions ---
+psi = TrialFunction(V)   # unknown poloidal flux psi(R,Z)
+v   = TestFunction(V)
+
+# --- Spatial coordinates: R = x[0], Z = x[1] ---
+x = SpatialCoordinate(mesh)
+R = x[0]
+
+# --- Solov'ev source constants (mu0*dp/dpsi = C1, F*dF/dpsi = C2) ---
+C1 = Constant(1.0)
+C2 = Constant(1.0)
+
+# --- Bilinear and linear forms (weak form) ---
+a = (1.0 / R) * inner(grad(psi), grad(v)) * dx
+L = (C1 * R + C2 / R) * v * dx
+
+# --- Dirichlet boundary condition: psi = 0 on the plasma boundary ---
+def boundary(x, on_boundary):
+    return on_boundary
+
+bc = DirichletBC(V, Constant(0.0), boundary)
+
+# --- Solve the linear elliptic problem ---
+psi_h = Function(V)
+solve(a == L, psi_h, bc)
+```
+Found the PDE name Grad-Shafranov equation
+Located body of triple tick
+
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Grad-Shafranov Equilibrium Equation (Solov'ev Model)</title>
+<script>
+  window.MathJax = {
+    tex: { inlineMath: [['$', '$'], ['\\(', '\\)']],
+           displayMath: [['$$', '$$'], ['\\[', '\\]']] }
+  };
+</script>
+<script id="MathJax-script" async
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js">
+</script>
+</head>
+<body>
+<h1>Grad-Shafranov Equilibrium Equation (Solov'ev Linear Source Model)</h1>
+
+<h2>General strong form</h2>
+<p>The poloidal flux $\psi(R,Z)$ in cylindrical coordinates $(R,Z)$ satisfies the
+elliptic Grad-Shafranov equation, where $\Delta^{*}$ is the Grad-Shafranov operator:</p>
+<p>
+$$
+\Delta^{*}\psi \;\equiv\; R\,\frac{\partial}{\partial R}\!\left(\frac{1}{R}\,\frac{\partial \psi}{\partial R}\right)
++ \frac{\partial^{2}\psi}{\partial Z^{2}}
+\;=\; -\,\mu_{0}\,R^{2}\,\frac{dp}{d\psi} \;-\; F\,\frac{dF}{d\psi}.
+$$
+</p>
+
+<h2>Solov'ev linear source model (strong form)</h2>
+<p>Choosing the Solov'ev closure with $\mu_{0}\,dp/d\psi = C_{1}$ and $F\,dF/d\psi = C_{2}$
+makes the right-hand side a simple linear source, yielding a linear elliptic problem:</p>
+<p>
+$$
+R\,\frac{\partial}{\partial R}\!\left(\frac{1}{R}\,\frac{\partial \psi}{\partial R}\right)
++ \frac{\partial^{2}\psi}{\partial Z^{2}}
+\;=\; -\left(C_{1}\,R^{2} + C_{2}\right)
+\qquad \text{in } \Omega \subset \{(R,Z)\}.
+$$
+</p>
+
+<h2>Boundary conditions</h2>
+<p>Homogeneous Dirichlet condition on the plasma boundary $\partial\Omega$:</p>
+<p>
+$$
+\psi = 0 \qquad \text{on } \partial\Omega.
+$$
+</p>
+
+<h2>Weak (variational) form</h2>
+<p>Dividing by $R$ uses the identity
+$\tfrac{1}{R}\Delta^{*}\psi = \nabla\!\cdot\!\big(\tfrac{1}{R}\nabla\psi\big)$,
+where $\nabla=(\partial_R,\partial_Z)$. Multiplying by a test function
+$v \in H_{0}^{1}(\Omega)$, integrating over $\Omega$, and integrating by parts
+(the boundary term vanishes since $v=0$ on $\partial\Omega$):</p>
+<p>
+Find $\psi \in H_{0}^{1}(\Omega)$ such that for all $v \in H_{0}^{1}(\Omega)$:
+$$
+\int_{\Omega} \frac{1}{R}\,\nabla\psi \cdot \nabla v \; dR\,dZ
+\;=\;
+\int_{\Omega} \left(C_{1}\,R + \frac{C_{2}}{R}\right) v \; dR\,dZ.
+$$
+</p>
+
+<p>Bilinear and linear forms:</p>
+<p>
+$$
+a(\psi,v) = \int_{\Omega} \frac{1}{R}\,\nabla\psi \cdot \nabla v \; dR\,dZ,
+\qquad
+L(v) = \int_{\Omega} \left(C_{1}\,R + \frac{C_{2}}{R}\right) v \; dR\,dZ.
+$$
+</p>
+</body>
+</html>
+
+Located body of triple tick
+
+
+% Grad-Shafranov equilibrium equation (Solov'ev linear source model)
+
+% ----- General strong form -----
+% Grad-Shafranov operator:
+\[
+\Delta^{*}\psi \equiv
+R\,\frac{\partial}{\partial R}\!\left(\frac{1}{R}\,\frac{\partial \psi}{\partial R}\right)
++ \frac{\partial^{2}\psi}{\partial Z^{2}}
+= -\,\mu_{0}\,R^{2}\,\frac{dp}{d\psi} - F\,\frac{dF}{d\psi}.
+\]
+
+% ----- Solov'ev linear source model (strong form) -----
+% mu0 dp/dpsi = C1,  F dF/dpsi = C2
+\[
+R\,\frac{\partial}{\partial R}\!\left(\frac{1}{R}\,\frac{\partial \psi}{\partial R}\right)
++ \frac{\partial^{2}\psi}{\partial Z^{2}}
+= -\left(C_{1}\,R^{2} + C_{2}\right)
+\qquad \text{in } \Omega .
+\]
+
+% ----- Boundary condition -----
+\[
+\psi = 0 \qquad \text{on } \partial\Omega .
+\]
+
+% ----- Weak (variational) form -----
+% Using (1/R) Delta* psi = div( (1/R) grad psi ), grad = (d/dR, d/dZ).
+% Find psi in H^1_0(Omega) such that for all v in H^1_0(Omega):
+\[
+\int_{\Omega} \frac{1}{R}\,\nabla\psi \cdot \nabla v \; dR\,dZ
+=
+\int_{\Omega} \left(C_{1}\,R + \frac{C_{2}}{R}\right) v \; dR\,dZ .
+\]
+
+% Bilinear and linear forms:
+\[
+a(\psi,v) = \int_{\Omega} \frac{1}{R}\,\nabla\psi \cdot \nabla v \; dR\,dZ,
+\qquad
+L(v) = \int_{\Omega} \left(C_{1}\,R + \frac{C_{2}}{R}\right) v \; dR\,dZ .
+\]
+
+Located body of triple tick
+
+
+# UFL / FEniCS representation of the Grad-Shafranov equilibrium equation
+# (Solov'ev linear source model) on a rectangular (R,Z) cross-section.
+#
+# Strong form:   R d/dR( (1/R) dpsi/dR ) + d^2 psi/dZ^2 = -(C1 R^2 + C2)
+# Divide by R:   div( (1/R) grad psi ) = -(C1 R + C2/R)
+# Weak form:     integral (1/R) grad(psi).grad(v) dx = integral (C1 R + C2/R) v dx
+#
+# Coordinates: x[0] = R (major radius), x[1] = Z (height).
+
+from dolfin import (RectangleMesh, Point, FunctionSpace, TrialFunction,
+                    TestFunction, SpatialCoordinate, Constant, DirichletBC,
+                    Function, solve)
+from ufl import inner, grad, dx
+
+# --- Mesh over the rectangular (R,Z) cross-section domain Omega ---
+R_min, R_max = 0.5, 1.5   # keep R > 0 (axisymmetric domain)
+Z_min, Z_max = -1.0, 1.0
+nx, ny = 64, 64
+mesh = RectangleMesh(Point(R_min, Z_min), Point(R_max, Z_max), nx, ny)
+
+# --- Function space ---
+V = FunctionSpace(mesh, "P", 1)
+
+# --- Trial / test functions ---
+psi = TrialFunction(V)   # unknown poloidal flux psi(R,Z)
+v   = TestFunction(V)
+
+# --- Spatial coordinates: R = x[0], Z = x[1] ---
+x = SpatialCoordinate(mesh)
+R = x[0]
+
+# --- Solov'ev source constants (mu0*dp/dpsi = C1, F*dF/dpsi = C2) ---
+C1 = Constant(1.0)
+C2 = Constant(1.0)
+
+# --- Bilinear and linear forms (weak form) ---
+a = (1.0 / R) * inner(grad(psi), grad(v)) * dx
+L = (C1 * R + C2 / R) * v * dx
+
+# --- Dirichlet boundary condition: psi = 0 on the plasma boundary ---
+def boundary(x, on_boundary):
+    return on_boundary
+
+bc = DirichletBC(V, Constant(0.0), boundary)
+
+# --- Solve the linear elliptic problem ---
+psi_h = Function(V)
+solve(a == L, psi_h, bc)
+

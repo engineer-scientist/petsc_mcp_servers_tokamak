@@ -116,3 +116,52 @@ env PYTHONPATH=/home/sarthak.sharma/petsc_mcp_servers \
 env PETSC_DIR=$HOME/petsc PETSC_ARCH=arch-linux-c-opt /usr/bin/python3 src/verify_tokamak.py
 /usr/bin/python3 src/collect_metrics.py
 ```
+
+---
+
+## Session 2 — 2026-07-24
+
+**Goal.** Task 5 (the explicit next step): demo the shipped **built-in `orchestrator_mcp_server`
+LLM agent** end-to-end on the tokamak problem and capture its transcript/artifacts.
+
+**Done + verified.**
+- Ran the shipped orchestrator (`orchestrate_async('the Grad-Shafranov equilibrium for a
+  tokamak plasma')`) twice, capturing full transcripts + generated code + all sub-server stdio
+  logs. Both runs are in the accumulated store; each dir has a `README.md`.
+- **As-shipped run — `artifacts/orchestrator-20260724/`** (~9m15s): the inner Claude drove all
+  **four** servers *in order on its own* → Grad–Shafranov (Solov'ev linear source) → structured
+  grid + FE → a **DMPLEX + PetscFE** solver (P1/P2, SNES→KSP) that the code-gen agent compiled
+  and **converged** (`CONVERGED_FNORM_RELATIVE`, 741 DOFs, "SOLVE CONVERGED SUCCESSFULLY"). The
+  orchestrator then re-compiled cleanly (rc=0) and, on its **first** `run_executable`, tripped
+  the shipped **hardcoded `cntlimit = 35`** → returned a *false* `{'failure_message': 'Too many
+  iterations 36 …'}`. I.e. a substantive success mislabeled a failure (the counter increments
+  on every SDK message; a faithful 4-stage run + one tool retry exceeds 35 before the final run).
+- **Fix (4th upstream change).** Same failure mode already fixed in the code generator (#5).
+  Applied the analogous **change #6** to `orchestrator_mcp_server.py`: `cntlimit` 35→80 and
+  instruct the agent to compile+run **once** (no degree/rank sweeps). Committed on branch
+  `tokamak-improvements` (`1fcfd95`); mirrored `patches/0004-orchestrator-*.patch`; documented
+  in `docs/AGENT_SYSTEM_CHANGES.md` (#6, table + narrative; scope now 3 files, +40/−9).
+- **Fixed re-run — `artifacts/orchestrator-20260724-fixed/`** (~12m44s): completes cleanly →
+  `I have completed the orchestration`, `FINAL_RESULT: {}` (success). Independent physics from
+  the canonical driver run: DMPLEX+PetscFE FE (16×16, degree-1, 225 DOFs, `||psi||_2 = 2.04156`,
+  rc=0) vs the driver's finite-difference DMDA + manufactured solution.
+- Updated `docs/USAGE.md` §4 and `artifacts/README.md` (new "built-in LLM orchestrator demos"
+  section). `artifacts/LATEST` deliberately left on `run-20260723-113024` (verify/metrics expect
+  the driver-run schema, which the orchestrator dirs don't have).
+
+**Still open (unchanged from Session 1 unless noted).**
+- **Push** the project repo to `github.com/engineer-scientist/petsc_mcp_servers_tokamak`
+  (user does this) — now includes Session-2 orchestrator artifacts + the #6 fix/patch/docs.
+- **Push the `tokamak-improvements` branch** upstream (user) — now **4** commits (added the
+  orchestrator cap fix `1fcfd95`).
+- **Poster/presenter details** + export poster PDF for EasyChair (abstract due **Aug 7, 2026**).
+- **Slides restyle** onto `slides/Argonne_Powerpoint_Template.pptx`.
+- **Real-machine shaping**: add a physical Solov'ev/Cerfon–Freidberg equilibrium (D-shape,
+  X-point) + q-profile, cross-check vs the FreeGS reference in `~/tokamak`. NB: both orchestrator
+  runs already chose a *Solov'ev* source form — useful momentum toward this.
+
+**EXACT NEXT STEP (start here next session).** Task 5 is **done**. Pick the next deliverable —
+recommended: **real-machine shaping** (shaped Solov'ev/Cerfon–Freidberg equilibrium + q-profile,
+cross-checked vs `~/tokamak` FreeGS) since it strengthens both poster and slides; *or* the
+**poster PDF export + presenter details** (time-boxed by the Aug 7 abstract deadline); *or* the
+**slides restyle** onto the official Argonne template. Confirm the choice with the user.
