@@ -155,13 +155,30 @@ LLM agent** end-to-end on the tokamak problem and capture its transcript/artifac
 - **Push the `tokamak-improvements` branch** upstream (user) — now **4** commits (added the
   orchestrator cap fix `1fcfd95`).
 - **Poster/presenter details** + export poster PDF for EasyChair (abstract due **Aug 7, 2026**).
-- **Slides restyle** onto `slides/Argonne_Powerpoint_Template.pptx`.
+- ~~**Slides restyle** onto `slides/Argonne_Powerpoint_Template.pptx`.~~ **DONE (Session 2)** — see below.
 - **Real-machine shaping**: add a physical Solov'ev/Cerfon–Freidberg equilibrium (D-shape,
   X-point) + q-profile, cross-check vs the FreeGS reference in `~/tokamak`. NB: both orchestrator
   runs already chose a *Solov'ev* source form — useful momentum toward this.
 
-**EXACT NEXT STEP (start here next session).** Task 5 is **done**. Pick the next deliverable —
-recommended: **real-machine shaping** (shaped Solov'ev/Cerfon–Freidberg equilibrium + q-profile,
-cross-checked vs `~/tokamak` FreeGS) since it strengthens both poster and slides; *or* the
-**poster PDF export + presenter details** (time-boxed by the Aug 7 abstract deadline); *or* the
-**slides restyle** onto the official Argonne template. Confirm the choice with the user.
+**Slides rebuilt on the official Argonne template (Session 2, 2026-07-24).** Rewrote
+`slides/make_slides.py` to open `slides/Argonne_Powerpoint_Template.pptx` as the base, drop its
+example slides, and populate the template's own layouts/placeholders (Title Slide; *Title,
+Subtitle and Bullets; *Title and Subtitle Only for the code slide; Closing slide Argonne DOE) so
+theme, Arial fonts, Argonne colors (blue #0082CA, gold #F8B200), logos, and slide numbers all
+come from the template. **13 slides**, including a **new "Fully autonomous: the built-in
+orchestrator"** slide (Task 5) and refreshed content (removed the now-done "demonstrate the
+orchestrator" next-step bullet). Uses 3 of the 4 `slides/*.jpg,*.png` motivation images (fusion
+power plant on the title, D-T fusion, DOE tokamak); the **particle-in-cell** image is
+intentionally omitted (PIC is a *kinetic* method and would misrepresent this elliptic-equilibrium
+work). Regenerated `slides/petsc_multiagent_tokamak.pptx` (branded, authoritative) + `…pdf`
+(matplotlib proxy, Argonne-styled — no LibreOffice on host, so the .pptx cannot be converted
+directly). Presenter name is a `[PRESENTER NAME]` fill-in on the title slide. Build with:
+`/home/sarthak.sharma/tokamak/.venv/bin/python slides/make_slides.py` (that venv has
+python-pptx + matplotlib + PIL; the mcp-test venv does **not**).
+
+**EXACT NEXT STEP (start here next session).** Task 5 + the slides restyle are **done**. Pick the
+next deliverable — recommended: **real-machine shaping** (shaped Solov'ev/Cerfon–Freidberg
+equilibrium + q-profile, cross-checked vs `~/tokamak` FreeGS) since it strengthens the poster and
+now feeds directly into the slides; *or* the **poster PDF export + presenter details** (time-boxed
+by the Aug 7 abstract deadline). Also: fill the `[PRESENTER NAME]` placeholder on slide 1. Confirm
+the choice with the user.
