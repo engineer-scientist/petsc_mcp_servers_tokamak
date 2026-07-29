@@ -55,6 +55,41 @@ good; that removes the ambiguity Junchao spotted.)*
 
 ---
 
+## 1b. THE second question Junchao asked — "You showed a torus, but the slide says DMDA / structured grid. How is that possible?"
+
+**Q: A torus is a curved 3-D shape; a structured grid / DMDA sounds like a rectangular box. How
+can a structured grid describe a torus?**
+
+**A:** No contradiction — **I'm not meshing the torus.** The torus is the physical device;
+the *solve* is on the **2-D poloidal cross-section**, because **Grad–Shafranov is axisymmetric**.
+- A tokamak is toroidally symmetric, so the equilibrium doesn't depend on the toroidal angle φ
+  (∂/∂φ = 0). That symmetry **collapses the 3-D torus to a 2-D boundary-value problem** for the
+  poloidal flux **ψ(R,Z)** on the cross-section — which is just a rectangle. A rectangle is exactly
+  what DMDA is built for, so a structured grid is the *natural* choice here, not a compromise.
+- **The toroidal geometry doesn't vanish — it's baked into the operator, not the mesh.** The code
+  solves the weak form `∫ (1/R) grad(ψ)·grad(v) = ∫ (C1·R + C2/R) v`; the `1/R` factor and the
+  `C1·R + C2/R` source *are* the torus. That R-weighting is why it's Grad–Shafranov and not plain
+  Poisson. Verify against the generated C: unknown is `ψ(R,Z)`, mesh is 2-D (`DMDACreate2d` in
+  run A, `DMPlexCreateBoxMesh(comm, 2, …)` in run B).
+
+**If he pushes — "but *could* you grid the actual 3-D torus with a structured grid?"** Yes, and
+it's worth knowing: **"structured" refers to the *logical* index topology (a regular i,j,k space),
+not the physical shape.** A full 3-D torus maps onto a logically-rectangular grid in curvilinear /
+flux coordinates (r, θ, φ) with the poloidal angle θ and toroidal angle φ **periodic**
+(`DM_BOUNDARY_PERIODIC`), plus a coordinate mapping that wraps the box onto the physical torus
+(DMDA supports a coordinate DM for exactly this). The one genuine wrinkle is the **coordinate
+singularity at the magnetic axis** (r = 0), where all θ collapse to a point and the mapping
+Jacobian degenerates — but that only bites if you grid the core in polar coordinates, and my
+axisymmetric (R,Z) reduction avoids it entirely.
+
+**One-liner to say out loud:** *"The torus is the physical device, but I'm not meshing the torus —
+Grad–Shafranov is axisymmetric, so it reduces to a 2-D problem for ψ(R,Z) on the poloidal
+cross-section, which is a rectangle, so a structured grid / DMDA is the natural discretization.
+The toroidal geometry is in the operator — the 1/R factor and the R-dependent source — not in the
+mesh."*
+
+---
+
 ## 2. Verification & correctness (expect the hardest questions here)
 
 **Q: How do you actually know the answer is correct, and not just plausible?**
