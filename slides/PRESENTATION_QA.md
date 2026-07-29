@@ -92,6 +92,10 @@ mesh."*
 
 ## 2. Verification & correctness (expect the hardest questions here)
 
+> Full walkthrough of the "order of accuracy p = 2.00, 2.00, 2.00" slide (what it
+> means, why there are three numbers, and the run data behind it): see
+> [`docs/VERIFICATION.md`](../docs/VERIFICATION.md).
+
 **Q: How do you actually know the answer is correct, and not just plausible?**
 **A:** Method of manufactured solutions. Solov'ev profiles (dp/dψ and F dF/dψ constant) admit a
 closed-form exact ψ, so I impose a known solution, derive the forcing, and measure the error as
