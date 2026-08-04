@@ -1,8 +1,10 @@
 <!--
 USRSE'26 poster abstract. Structure follows USRSE_2026_Posters_Submission_Template.docx.
-Submit as PDF to EasyChair by Friday 2026-08-07. Numbers marked [VERIFY] are filled from
-the canonical run's verification.json / metrics.json (see src/verify_tokamak.py,
-src/collect_metrics.py). Replace [PRESENTER ...] placeholders before submission.
+Submit as PDF to EasyChair by Friday 2026-08-07. Numbers are filled from the canonical
+run's verification.json / metrics.json (see src/verify_tokamak.py, src/collect_metrics.py).
+Presenter details filled 2026-08-04. Regenerate the .docx with:
+  pandoc poster/abstract.md -o poster/USRSE26_abstract.docx \
+    --reference-doc=poster/USRSE_2026_Posters_Submission_Template.docx
 -->
 
 # Title
@@ -11,9 +13,9 @@ src/collect_metrics.py). Replace [PRESENTER ...] placeholders before submission.
 
 # Presenters
 
-[PRESENTER NAME] <[email]>, Mathematics and Computer Science Division, Argonne National Laboratory, [ORCID]
+Sarthak Sharma <ss694@buffalo.edu>, PhD candidate in Computational and Data Sciences, State University of New York at Buffalo, 0009-0009-6746-169X
 
-<!-- add co-presenters / advisors as appropriate, e.g. the PETSc team -->
+Dr Junchao Zhang <jczhang@anl.gov>, Division of Mathematics and Computer Science, Argonne National Laboratory, 0000-0003-0367-2358
 
 # Keywords
 

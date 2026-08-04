@@ -1,7 +1,7 @@
 # Roadmap & status
 
 > Living document: the plan, current status, and active next step. Newest status in
-> `docs/SESSION_LOG.md`. Last updated: **2026-07-23** (Session 1).
+> `docs/SESSION_LOG.md`. Last updated: **2026-08-04** (Session 3).
 
 ## Objective
 
@@ -20,10 +20,10 @@ generation for PDE-based simulation science.
 | 2 | Agent-generated **Grad–Shafranov** PETSc solver that **compiles & runs** | ✅ Session 1 (DMDA+SNES, 1&4 ranks) |
 | 3 | **Verification**: manufactured-solution convergence | ✅ Session 1 (**p = 2.00**) |
 | 4 | Post-processing figures (convergence, flux surfaces) | ✅ Session 1 · q-profile + shaped ⬜ |
-| 5 | Demonstrate the built-in **orchestrator** agent end-to-end (where feasible) | ⬜ |
+| 5 | Demonstrate the built-in **orchestrator** agent end-to-end (where feasible) | ✅ Session 2 (DMPLEX+PetscFE, 225 DOFs; +upstream cntlimit fix) |
 | 6 | **Metrics** vs the proposal's decision gates (correctness, human-time, tokens/cost) | ✅ Session 1 (`metrics.md`) |
-| 7 | **US-RSE 2026 poster** — abstract ✅ (docx) · editable poster PPTX ✅ · presenter details + PDF export ⬜ | 🟡 |
-| 8 | **Argonne intern presentation** (slides) | 🟡 draft deck ✅ · restyle on ANL template ⬜ |
+| 7 | **US-RSE 2026 poster** — abstract ✅ (md+docx) · presenter details ✅ · editable poster PPTX ✅ · PDF export for EasyChair ⬜ | 🟡 |
+| 8 | **Argonne intern presentation** (slides) | ✅ Session 2 (13 slides on official ANL template) |
 | 9 | Real-machine shaping (Solov'ev/Cerfon–Freidberg D-shape + X-point, q-profile) | ⬜ |
 | 10 | Stretch: harder physics (nonlinear profiles; time-dependent/resistive MHD) | ⬜ |
 

@@ -182,3 +182,48 @@ equilibrium + q-profile, cross-checked vs `~/tokamak` FreeGS) since it strengthe
 now feeds directly into the slides; *or* the **poster PDF export + presenter details** (time-boxed
 by the Aug 7 abstract deadline). Also: fill the `[PRESENTER NAME]` placeholder on slide 1. Confirm
 the choice with the user.
+
+---
+
+## Session 3 — 2026-08-04
+
+**Goal.** Fill presenter details into the USRSE'26 abstract, ship `.md` + `.docx` versions,
+and mark the now-complete roadmap milestones.
+
+**Done.**
+- **Presenter details filled** in `poster/abstract.md` (replaced the `[PRESENTER ...]`
+  placeholder with two presenters, in the template's `Name <email>, affiliation, ORCID`
+  format):
+  - Sarthak Sharma <ss694@buffalo.edu>, PhD candidate in Computational and Data Sciences,
+    State University of New York at Buffalo, 0009-0009-6746-169X
+  - Dr Junchao Zhang <jczhang@anl.gov>, Division of Mathematics and Computer Science,
+    Argonne National Laboratory, 0000-0003-0367-2358
+- **Regenerated `poster/USRSE26_abstract.docx`** from the updated markdown with pandoc 3.1.3,
+  using the official `poster/USRSE_2026_Posters_Submission_Template.docx` as `--reference-doc`
+  so it inherits the template's styles. Verified round-trip: both presenters present, all six
+  sections (Title/Presenters/Keywords/Abstract/References/Connection) intact, and the
+  Grad–Shafranov equation rendered as real OMML math (not raw TeX). Rebuild command is now
+  documented in the comment header of `poster/abstract.md`.
+- **Roadmap updated** (`docs/ROADMAP.md`): milestone **5** (built-in orchestrator demo) and
+  **8** (Argonne intern presentation) → ✅; milestone 7 refreshed (presenter details ✅, only
+  EasyChair PDF export remains).
+
+**Environment note.** This host HAS pandoc 3.1.3 and pdflatex/xelatex/lualatex (so
+markdown→docx and markdown→PDF both work locally), but still NO LibreOffice and NO
+python-docx in either venv.
+
+**Still open.**
+- **Poster PDF export for EasyChair** — abstract due **Aug 7, 2026** (3 days out). Produce the
+  submission PDF, e.g. `pandoc poster/abstract.md -o poster/USRSE26_abstract.pdf
+  --pdf-engine=xelatex` (adjust for the equation/emoji as needed).
+- **Fill presenter names** into the poster PPTX (`poster/make_poster.py` `auth=` line, still
+  `[PRESENTER NAME], <email>, ORCID`) and the slides title (`[PRESENTER NAME]` on slide 1),
+  then rebuild both.
+- **Push** both repos (user does this): project repo + `tokamak-improvements` branch upstream.
+- **Real-machine shaping** (milestone 9): shaped Solov'ev/Cerfon–Freidberg D-shape + X-point,
+  q-profile, cross-check vs `~/tokamak` FreeGS.
+
+**EXACT NEXT STEP (start here next session).** Deadline-first: finalize the USRSE'26 submission
+package before **Aug 7** — export `poster/abstract.md` → PDF for EasyChair, and fill the
+presenter names into the poster PPTX + slide 1 so all three artifacts agree. Then (post-deadline)
+tackle **real-machine shaping** to strengthen the physics story. Confirm with the user.
