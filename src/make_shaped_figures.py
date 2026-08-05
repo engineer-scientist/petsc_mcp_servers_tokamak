@@ -50,17 +50,27 @@ def _latest_shaped():
 
 
 def flux_panel(machines, path, dpi=150):
-    fig, axes = plt.subplots(1, len(machines), figsize=(4.3 * len(machines), 5.4))
+    # Each equilibrium is a tall-narrow, equal-aspect (R,Z) plot; size each column to its own
+    # width/height ratio so the panels pack tightly with no wasted horizontal space.
+    cases = [cf.solve_case(m) for m in machines]
+    aspects = []
+    for case in cases:
+        R0 = case.params["R0"]; b = case.box
+        aspects.append(((b["xmax"] - b["xmin"]) * R0) / ((b["ymax"] - b["ymin"]) * R0))
+    panel_h = 4.6
+    fig_w = panel_h * sum(aspects) + 0.9        # + y-label / inter-panel spacing
+    fig_h = panel_h + 0.7                        # + suptitle / x-labels
+    fig, axes = plt.subplots(1, len(machines), figsize=(fig_w, fig_h),
+                             gridspec_kw={"width_ratios": aspects}, constrained_layout=True)
     if len(machines) == 1:
         axes = [axes]
-    for ax, machine in zip(axes, machines):
-        case = cf.solve_case(machine)
+    for ax, case, machine in zip(axes, cases, machines):
         R0 = case.params["R0"]; b = case.box
         xs = np.linspace(b["xmin"], b["xmax"], 400)
         ys = np.linspace(b["ymin"], b["ymax"], 500)
         XX, YY = np.meshgrid(xs, ys)
         PSI = case.psi_hat(XX, YY)
-        cfl = ax.contourf(XX * R0, YY * R0, PSI, levels=30, cmap="viridis")
+        ax.contourf(XX * R0, YY * R0, PSI, levels=30, cmap="viridis")
         ax.contour(XX * R0, YY * R0, PSI, levels=14, colors="w", linewidths=0.4)
         ax.contour(XX * R0, YY * R0, PSI, levels=[0.0], colors="r", linewidths=1.8)
         ax.plot(case.opoint[0] * R0, 0.0, "w+", ms=11, mew=2)
@@ -68,6 +78,7 @@ def flux_panel(machines, path, dpi=150):
             xsx, ysx = case.sep_point[0] * R0, case.sep_point[1] * R0
             ax.plot([xsx, xsx], [ysx, -ysx], "rx", ms=10, mew=2.2)
         ax.set_aspect("equal")
+        ax.margins(0)
         ax.set_xlabel("R [m]")
         p = case.params
         ax.set_title("%s\n$\\epsilon$=%.2f $\\kappa$=%.1f $\\delta$=%.2f"
@@ -75,7 +86,6 @@ def flux_panel(machines, path, dpi=150):
     axes[0].set_ylabel("Z [m]")
     fig.suptitle("Agent-generated shaped Grad-Shafranov equilibria (Cerfon-Freidberg Solov'ev)",
                  fontsize=12)
-    fig.tight_layout(rect=[0, 0, 1, 0.96])
     fig.savefig(path, dpi=dpi)
     plt.close(fig)
     return path

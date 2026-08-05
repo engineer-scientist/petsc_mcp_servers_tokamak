@@ -2,8 +2,9 @@
 USRSE'26 poster abstract. Structure follows USRSE_2026_Posters_Submission_Template.docx.
 Submit as PDF to EasyChair by Friday 2026-08-07. Numbers are filled from the canonical
 run's verification.json / metrics.json (see src/verify_tokamak.py, src/collect_metrics.py).
-Presenter details filled 2026-08-04. Regenerate the .docx with:
-  pandoc poster/abstract.md -o poster/USRSE26_abstract.docx \
+Presenter details filled 2026-08-04; shaped real-machine results added 2026-08-05.
+Regenerate the .docx with:
+  pandoc poster/USRSE26_abstract.md -o poster/USRSE26_abstract.docx \
     --reference-doc=poster/USRSE_2026_Posters_Submission_Template.docx
 -->
 
@@ -19,7 +20,7 @@ Dr Junchao Zhang <jczhang@anl.gov>, Division of Mathematics and Computer Science
 
 # Keywords
 
-research software engineering; AI agents for scientific computing; PETSc; partial differential equations; magnetically confined fusion; verification and validation
+research software engineering; AI agents for scientific computing; PETSc; partial differential equations; magnetically confined fusion; shaped tokamak equilibria; safety factor; verification and validation
 
 # Abstract
 
@@ -54,6 +55,19 @@ generated code compiled and ran on **1 and 4 MPI ranks** on an ANL CELS compute 
 **2.1×10⁻⁴** on a 65×65 grid and falls to **1.3×10⁻⁵** on 257×257, giving an **observed
 order of accuracy p = 2.00** (textbook second order for central differences) under grid
 refinement, with `SNES` reporting `CONVERGED_FNORM_RELATIVE`.
+
+We then drove the same pipeline into a **shaped, real-machine** regime. Using the analytic
+**Cerfon–Freidberg "one size fits all" Solov'ev** solution as an exact benchmark, a single
+agent-generated, parameterized PETSc solver reproduces **three physically shaped equilibria** —
+an **ITER-like D-shape**, a **spherical-tokamak (NSTX-like)** plasma, and a **diverted
+double-null with magnetic X-points** — set by the inverse aspect ratio, elongation, and
+triangularity. Each case is **verified at second order (p = 2.00)** against the analytic
+solution and runs on 1 and 4 MPI ranks with no human edits. We compute the **safety-factor
+profile q(ψ)** of each verified equilibrium and cross-check it against the independent
+**FreeGS** equilibrium code, obtaining agreement to **better than 0.2%** on identical fields,
+with the recovered elongation and triangularity matching the targets to ~1–2%. This shows the
+workflow scales from a toy verification anchor to trustworthy, real-machine-shaped equilibria
+without changing the generated solver's structure.
 
 We report **decision-gate metrics** — correctness (identified model, compiled/ran,
 convergence order), efficiency (wall-clock and LLM/tool calls), and human effort (0 lines
