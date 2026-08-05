@@ -2,7 +2,7 @@
 """
 make_poster.py -- build the US-RSE 2026 poster from ONE layout spec, with two backends:
   * an EDITABLE PowerPoint  -> poster/USRSE26_poster.pptx   (native text boxes + shapes)
-  * a preview image + PDF   -> poster/USRSE26_poster_preview.png / .pdf  (matplotlib)
+  * a rendered image + PDF  -> poster/USRSE26_poster.png / .pdf  (matplotlib)
 
 Both back-ends use the SAME positions (inches) and font sizes (points). Points are
 absolute (1 pt = 1/72 in), so the preview faithfully shows how big the text is on the
@@ -123,6 +123,39 @@ def _layout_column(x, colw, items, ytop, ybot, gut=0.55, gut_cap=1.1):
     return panels, figs
 
 
+def _logo_rgb(path):
+    """Return a path to an RGB(A) version of a logo, converting CMYK/other modes (e.g. the
+    SUNY .jpg is CMYK, which PowerPoint/matplotlib render with wrong colors)."""
+    from PIL import Image
+    im = Image.open(path)
+    if im.mode in ("RGB", "RGBA", "L", "P"):
+        return path
+    cache = os.path.join(HERE, ".logo_cache")
+    os.makedirs(cache, exist_ok=True)
+    out = os.path.join(cache, os.path.splitext(os.path.basename(path))[0] + "_rgb.png")
+    im.convert("RGB").save(out)
+    return out
+
+
+def _place_logos(paths, band_y, band_h, target_h=1.5, gap=2.6):
+    """Lay out logos in a horizontal row, centered in the poster width and vertically in the
+    footer band. Returns [(rgb_path, x, y, w, h), ...]. Scales down if the row is too wide."""
+    from PIL import Image
+    ars = [Image.open(p).size[0] / Image.open(p).size[1] for p in paths]
+    widths = [target_h * ar for ar in ars]
+    total = sum(widths) + gap * (len(paths) - 1)
+    if total > W - 2.0:                                 # scale the whole row to fit
+        sc = (W - 2.0) / total
+        target_h *= sc; widths = [w * sc for w in widths]; gap *= sc; total = W - 2.0
+    x = (W - total) / 2.0
+    y = band_y + (band_h - target_h) / 2.0
+    out = []
+    for p, w in zip(paths, widths):
+        out.append((_logo_rgb(p), x, y, w, target_h))
+        x += w + gap
+    return out
+
+
 def build_spec():
     """Return the poster as data: a title band, panels, figures. Positions in inches.
 
@@ -144,34 +177,28 @@ def build_spec():
 
     colw, gut = 14.9, 0.55
     x1 = 0.7; x2 = x1 + colw + gut; x3 = x2 + colw + gut
-    ytop, ybot = 6.4, 35.4
+    ytop, ybot = 6.4, 33.1                              # leave a logo footer below the columns
 
     # ---- column 1: why + method ------------------------------------------------
     col1 = [
         dict(type="panel", title="1  Motivation", body=[
             ("Building correct, fast HPC simulation code demands scarce, implicit expertise. "
-             "Can a multi-agent AI system automate the path from a plain-language idea to "
-             "VERIFIED code for a real fusion problem?", F_BODY, DARK),
+             "Can a system of multiple AI agents automate the path from a plain-language idea "
+             "to VERIFIED code for a real fusion problem?", F_BODY, DARK),
             ("We answer yes for the tokamak Grad-Shafranov equilibrium — with verification "
              "as a first-class deliverable.", F_BODY, TEAL, "b"),
         ]),
-        dict(type="fig", title="Fusion energy",
-             path=os.path.join(IMAGES, "schematic of nuclear fusion power plant.png"),
-             caption="A tokamak turns fusion heat into electricity; its plasma equilibrium is "
-                     "governed by the Grad-Shafranov equation."),
         dict(type="panel", title="2  The problem", body=[
             ("Axisymmetric ideal-MHD force balance for the poloidal flux psi(R,Z):", F_BODY, DARK),
             ("Δ*psi = -μ₀R² p'(psi) - F F'(psi)", F_EQ, TEAL, "eq"),
             ("Sets the flux surfaces, magnetic axis, plasma shape, and safety factor q.", F_BODY, DARK),
             ("Solov'ev profiles admit an EXACT solution → a rigorous verification anchor.", F_BODY, DARK),
         ]),
-        dict(type="panel", title="3  The multi-agent system", body=[
-            ("Specialist agents (MCP servers) on ANL's Argo (Claude Opus 4.8):", F_BODY, DARK),
-            ("• Modeling → PDE identity & weak form", F_BODY, DARK),
-            ("• Numerical Analysis → grid, discretization, solver", F_BODY, DARK),
-            ("• HPC Code Generation → writes, compiles & runs PETSc C", F_BODY, DARK),
-            ("• Driver → records every artifact (full provenance)", F_BODY, DARK),
-        ]),
+        dict(type="fig", title="3  The multi-agent system",
+             path=os.path.join(IMAGES, "system_of_multiple_AI_agents_to_automate_simulations.png"),
+             caption="Fig. 1  A Problem-Definition layer, an Orchestrator agent + shared/persistent "
+                     "memory (Workflow Control), and specialist Modeling / Numerical-Analysis / "
+                     "Code-Generation / Visualization agents (Agent Execution)."),
     ]
 
     # ---- column 2: pipeline + the real-machine equilibria ----------------------
@@ -196,7 +223,7 @@ def build_spec():
         ]),
         dict(type="fig", title="6  Real-machine equilibria",
              path=os.path.join(FIGURES, "shaped_equilibria.png"),
-             caption="Fig. 1  One agent-generated solver → ITER, spherical-tokamak (NSTX-like) "
+             caption="Fig. 2  One agent-generated solver → ITER, spherical-tokamak (NSTX-like) "
                      "and diverted double-null (X-point) equilibria. Red = separatrix; × = X-points."),
     ]
 
@@ -204,7 +231,7 @@ def build_spec():
     col3 = [
         dict(type="fig", title="7  Verification: 2nd order",
              path=os.path.join(FIGURES, "shaped_convergence.png"),
-             caption="Fig. 2  Method of manufactured solutions vs the exact Cerfon-Freidberg "
+             caption="Fig. 3  Method of manufactured solutions vs the exact Cerfon-Freidberg "
                      "solution: observed order p = 2.00 for all three machines."),
         dict(type="panel", title="8  Safety factor & FreeGS cross-check", body=[
             ("Safety-factor q(ψ_N) computed from the verified flux surfaces:", F_BODY, DARK),
@@ -230,11 +257,16 @@ def build_spec():
         panels += pp; figs += ff
 
     title = dict(
-        title="Automated Problem-to-Solution Generation for Tokamak Fusion-Plasma Simulations",
+        title="A System of Multiple AI Agents for Automating Tokamak-Plasma Simulation for Nuclear Fusion Energy",
         sub="A hierarchical multi-agent PETSc system: from a plain-language prompt to verified, real-machine Grad-Shafranov equilibria",
         auth="Sarthak Sharma (State University of New York at Buffalo)  ·  Dr Junchao Zhang (Mathematics and Computer Science Division, Argonne National Laboratory)  ·  US-RSE 2026",
     )
-    return dict(title=title, panels=panels, figs=figs, run_id=run_id)
+    footer = dict(y=33.5, h=1.9, logos=[
+        os.path.join(IMAGES, "ANL_logo.png"),
+        os.path.join(IMAGES, "PETSc_TAO_logo.png"),
+        os.path.join(IMAGES, "SUNY_Buffalo_logo.jpg"),
+    ])
+    return dict(title=title, panels=panels, figs=figs, footer=footer, run_id=run_id)
 
 
 # ============================ matplotlib preview backend ============================
@@ -317,6 +349,14 @@ def render_preview(spec, out_png, out_pdf):
         for i, ln in enumerate(wrap(f["caption"], F_CAP, f["w"] - 0.8)):
             ax.text(f["x"] + f["w"] / 2, Y(f["y"] + f["h"] - cap_h + 0.15 + i * F_CAP / 72 * 1.3),
                     ln, fontsize=F_CAP, color=GREY, va="top", ha="center")
+
+    # footer: separator rule + institution logos
+    ft = spec.get("footer")
+    if ft:
+        ax.add_patch(Rectangle((0.7, Y(ft["y"] - 0.25)), W - 1.4, 0.03, color=TEAL, zorder=6))
+        for path, x, y, w, hh in _place_logos(ft["logos"], ft["y"], ft["h"]):
+            img = mpimg.imread(path)
+            ax.imshow(img, extent=[x, x + w, Y(y + hh), Y(y)], zorder=7, aspect="auto")
 
     fig.savefig(out_png, dpi=64); fig.savefig(out_pdf); plt.close(fig)
     print("[poster] wrote %s and %s" % (out_png, out_pdf))
@@ -402,6 +442,13 @@ def render_pptx(spec, out):
         box(f["x"] + 0.3, f["y"] + f["h"] - 1.35, f["w"] - 0.6, 1.2,
             [(f["caption"], F_CAP, GREY)], anchor=MSO_ANCHOR.TOP)
 
+    # footer: separator rule + institution logos
+    ft = spec.get("footer")
+    if ft:
+        rect(0.7, ft["y"] - 0.25, W - 1.4, 0.03, TEAL)
+        for path, x, y, w, hh in _place_logos(ft["logos"], ft["y"], ft["h"]):
+            slide.shapes.add_picture(path, Inches(x), Inches(y), height=Inches(hh))
+
     prs.save(out)
     print("[poster] wrote %s (%.0f x %.0f in) from run %s" % (out, W, H, spec["run_id"]))
 
@@ -409,8 +456,8 @@ def render_pptx(spec, out):
 def main():
     spec = build_spec()
     render_pptx(spec, os.path.join(HERE, "USRSE26_poster.pptx"))
-    render_preview(spec, os.path.join(HERE, "USRSE26_poster_preview.png"),
-                   os.path.join(HERE, "USRSE26_poster_preview.pdf"))
+    render_preview(spec, os.path.join(HERE, "USRSE26_poster.png"),
+                   os.path.join(HERE, "USRSE26_poster.pdf"))
 
 
 if __name__ == "__main__":

@@ -10,7 +10,7 @@ Regenerate the .docx with:
 
 # Title
 
-**Automated Problem-to-Solution Generation for a Tokamak Fusion-Plasma Simulation with a Hierarchical Multi-Agent PETSc System**
+**A System of Multiple AI Agents for Automating Tokamak-Plasma Simulation for Nuclear Fusion Energy (with a Hierarchical Multi-Agent PETSc System)**
 
 # Presenters
 
