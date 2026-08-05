@@ -1,0 +1,5 @@
+{
+  "output": "Grid            : Nx = 65, Ny = 65\nSpacing         : hx = 1.100000e-02, hy = 1.870000e-02\nMax-norm error  : ||psi_h - PsiExact||_inf = 1.789351e-06\nDiscrete L2 err : 9.495260e-07\nSNESGetConvergedReason: CONVERGED_FNORM_RELATIVE\n",
+  "response_loops": 25,
+  "tool_cnt": 6
+}

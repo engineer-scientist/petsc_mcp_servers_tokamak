@@ -98,6 +98,79 @@ CODEGEN_SPEC = (
     "and be runnable on 1 or multiple MPI ranks."
 )
 
+# ---------------------------------------------------------------------------------
+# SHAPED problem (milestone 9): a real-machine Cerfon-Freidberg Solov'ev equilibrium.
+# Same Grad-Shafranov operator, but the exact solution is the analytic CF Solov'ev
+# solution -- a physically shaped (D-shape / X-point) equilibrium that is STILL an exact
+# closed-form answer, so the manufactured-solution convergence test still holds. The
+# solver works in NORMALIZED coordinates x = R/R0, y = Z/R0 (so the operator is identical
+# to the toy solver with R -> x); per-machine coefficients come from a PETSc options-file.
+# ---------------------------------------------------------------------------------
+SCIENCE_SPEC_SHAPED = (
+    "the Grad-Shafranov equilibrium for a shaped, real-machine magnetically confined "
+    "tokamak plasma using Solov'ev profiles that admit the Cerfon-Freidberg closed-form "
+    "solution: the axisymmetric ideal-MHD force balance for the poloidal magnetic flux "
+    "psi(R,Z), Delta^* psi = -mu0 R^2 dp/dpsi - F dF/dpsi, with Solov'ev profiles "
+    "(dp/dpsi and F dF/dpsi constant) so that in normalized coordinates x=R/R0, y=Z/R0 the "
+    "source reduces to (1-A) x^2 + A; this yields a physically shaped equilibrium whose "
+    "plasma boundary (D-shape, possibly with an X-point) is set by the inverse aspect ratio, "
+    "elongation and triangularity, with a Dirichlet boundary condition on the poloidal box"
+)
+
+CODEGEN_SPEC_SHAPED = (
+    "solves the tokamak Grad-Shafranov equilibrium for a shaped, real-machine plasma "
+    "(Cerfon-Freidberg analytic Solov'ev solution) and verifies itself with the method of "
+    "manufactured solutions. Work entirely in NORMALIZED coordinates x = R/R0 and y = Z/R0 "
+    "(x>0), so the operator is identical in form to the standard case with R replaced by x. "
+    "Discretize the Grad-Shafranov operator "
+    "Delta^* psi = d2psi/dx2 - (1/x) dpsi/dx + d2psi/dy2 on a PETSc DMDA "
+    "(DM_BOUNDARY_NONE, 1 dof, stencil width 1) with standard 2nd-order central finite "
+    "differences, and solve with SNES (the residual is linear so Newton converges in one "
+    "step; assemble the true Jacobian). "
+    "The rectangular computational domain is x in [xmin,xmax], y in [ymin,ymax], read from "
+    "options -cf_xmin -cf_xmax -cf_ymin -cf_ymax (defaults xmin=0.648, xmax=1.352, "
+    "ymin=-0.5984, ymax=0.5984). Grid size from -da_grid_x and -da_grid_y (default 65 x 65); "
+    "include the boundary points so hx=(xmax-xmin)/(Nx-1), hy=(ymax-ymin)/(Ny-1). "
+    "The MANUFACTURED exact solution is the Cerfon-Freidberg flux "
+    "PsiExact(x,y) = psi_p + sum_{i=1..12} c[i-1] * psi_i, where (writing L = log(x)) the "
+    "particular solution is "
+    "psi_p = x^4/8 + A*((x^2/2)*L - x^4/8), and the 12 homogeneous basis functions are: "
+    "psi_1 = 1; "
+    "psi_2 = x^2; "
+    "psi_3 = y^2 - x^2*L; "
+    "psi_4 = x^4 - 4*x^2*y^2; "
+    "psi_5 = 2*y^4 - 9*y^2*x^2 + 3*x^4*L - 12*x^2*y^2*L; "
+    "psi_6 = x^6 - 12*x^4*y^2 + 8*x^2*y^4; "
+    "psi_7 = 8*y^6 - 140*y^4*x^2 + 75*y^2*x^4 - 15*x^6*L + 180*x^4*y^2*L - 120*x^2*y^4*L; "
+    "psi_8 = y; "
+    "psi_9 = y*x^2; "
+    "psi_10 = y^3 - 3*y*x^2*L; "
+    "psi_11 = 3*y*x^4 - 4*y^3*x^2; "
+    "psi_12 = 8*y^5 - 45*y*x^4 - 80*y^3*x^2*L + 60*y*x^4*L. "
+    "The scalar A is read from option -cf_A (default -0.155). The 12 coefficients c[0..11] "
+    "are read as a PETSc real array from option -cf_c via PetscOptionsGetRealArray (default "
+    "c = {0.0666504678, -0.1954979606, -0.0511055413, -0.0459671061, 0.0055324134, "
+    "-0.0055311112, -0.0001480056, 0, 0, 0, 0, 0}, i.e. the ITER case). "
+    "Because psi_p gives Delta^* psi_p = (1-A)x^2 + A and every psi_i is a homogeneous "
+    "solution (Delta^* psi_i = 0), the exact forcing is simply f(x,y) = (1-A)*x^2 + A. "
+    "Set the right-hand side f(x,y) = (1-A)*x^2 + A, and impose the Dirichlet boundary "
+    "condition psi = PsiExact(x,y) on all four edges. "
+    "IMPORTANT: PsiExact is NONZERO on the box edges in general (the plasma boundary psi=0 "
+    "is an interior contour, not the box), so the Dirichlet values must be set from "
+    "PsiExact(x,y) at each boundary node -- do NOT assume the boundary values are zero. "
+    "Solve Delta^* psi = f and compute the error against PsiExact. "
+    "PRINT exactly these lines: the grid Nx Ny, the spacings hx hy, the maximum-norm error "
+    "||psi_h - PsiExact||_inf, the discrete L2 error, and PETSc's SNESGetConvergedReason. "
+    "Also support -psi_view to VecView the numerical solution. Make the code clean, use "
+    "PetscCall() on every PETSc call, no %D formats, and be runnable on 1 or multiple MPI ranks."
+)
+
+# Problem registry: which (science, codegen) spec pair each --problem selects.
+SPECS = {
+    "mms":    {"science": SCIENCE_SPEC,        "codegen": CODEGEN_SPEC},
+    "shaped": {"science": SCIENCE_SPEC_SHAPED, "codegen": CODEGEN_SPEC_SHAPED},
+}
+
 
 class _Tee:
     """Write to two streams at once (console + transcript file)."""
@@ -191,11 +264,11 @@ def record_stage(outdir, stage, status, **extra):
 # ---------------------------------------------------------------------------------
 # Stage 1 -- Mathematical Modeling agent (Problem Definition layer)
 # ---------------------------------------------------------------------------------
-async def stage_model(outdir):
+async def stage_model(outdir, science_spec):
     print("[model] Mathematical Modeling agent: generating PDE model ...", flush=True)
     t0 = time.time()
-    with capture(outdir, "model", SCIENCE_SPEC):
-        r = await modeling_agent.generate_model_async(SCIENCE_SPEC)
+    with capture(outdir, "model", science_spec):
+        r = await modeling_agent.generate_model_async(science_spec)
     dt = time.time() - t0
     if "failure" in r or "failure_message" in r:
         record_stage(outdir, "model", "failed", seconds=round(dt, 1),
@@ -218,11 +291,11 @@ async def stage_model(outdir):
 # ---------------------------------------------------------------------------------
 # Stage 2 -- Numerical Analysis agent (Agent Execution layer)
 # ---------------------------------------------------------------------------------
-async def stage_na(outdir, model):
+async def stage_na(outdir, model, science_spec):
     print("[na] Numerical Analysis agent: selecting grid/discretization/solver ...", flush=True)
     t0 = time.time()
     # Feed the agent the scientific spec augmented with the model's key facts.
-    na_spec = SCIENCE_SPEC + (
+    na_spec = science_spec + (
         ". The PDE is elliptic and %s. It is %s."
         % ("nonlinear (source depends on psi)",
            "time-dependent" if model.get("time-dependent") else "time-independent"))
@@ -252,12 +325,12 @@ async def stage_na(outdir, model):
 # Stage 3 -- HPC Code Generation agent (Agent Execution layer)
 #            (generates + compiles + runs PETSc C via the compile-run agent)
 # ---------------------------------------------------------------------------------
-async def stage_codegen(outdir):
+async def stage_codegen(outdir, codegen_spec):
     print("[codegen] HPC Code Generation agent: generating + compiling PETSc C ...", flush=True)
     print("[codegen] (this drives an inner Claude with the compile-run tool; can take minutes)", flush=True)
     t0 = time.time()
-    with capture(outdir, "codegen", CODEGEN_SPEC):
-        r = await codegen_agent.generate_code_async(CODEGEN_SPEC)
+    with capture(outdir, "codegen", codegen_spec):
+        r = await codegen_agent.generate_code_async(codegen_spec)
     dt = time.time() - t0
     write(os.path.join(outdir, "codegen.json"),
           {k: v for k, v in r.items() if k != "code"})
@@ -294,7 +367,8 @@ def write_dataflow(outdir):
     L = lines.append
     L("# Data flow for run `%s`\n" % m.get("run_id"))
     L("Generated by `orchestrate_tokamak.py`. Every arrow is a real hand-off; every file")
-    L("named below is in this directory. Model=%s, host=%s.\n" % (m.get("model"), m.get("host")))
+    L("named below is in this directory. Problem=%s, Model=%s, host=%s.\n"
+      % (m.get("problem", "mms"), m.get("model"), m.get("host")))
     L("```")
     L("HUMAN  --science_spec-->  [Mathematical Modeling agent]")
     L("                              in : model_input.txt   (the prompt's problem statement)")
@@ -338,7 +412,7 @@ def write_dataflow(outdir):
     write(os.path.join(outdir, "DATAFLOW.md"), "\n".join(lines) + "\n")
 
 
-def init_manifest(outdir, args):
+def init_manifest(outdir, args, specs):
     m = load_manifest(outdir)
     if not m:
         m = {
@@ -352,10 +426,11 @@ def init_manifest(outdir, args):
         }
     # Always refresh the provenance fields that reflect the *current* code/specs, so a
     # resumed run records the specs actually in force (not a stale copy from creation).
+    m["problem"] = args.problem
     m["mcp_servers_git"] = git_head(MCP_DIR)
     m["project_git"] = git_head(PROJECT)
-    m["science_spec"] = SCIENCE_SPEC
-    m["codegen_spec"] = CODEGEN_SPEC
+    m["science_spec"] = specs["science"]
+    m["codegen_spec"] = specs["codegen"]
     m["last_run"] = datetime.datetime.now().isoformat()
     save_manifest(outdir, m)
     return m
@@ -365,8 +440,9 @@ async def run(args):
     run_id = args.resume or now_id()
     outdir = os.path.join(ARTIFACTS, run_id)
     os.makedirs(outdir, exist_ok=True)
-    init_manifest(outdir, args)
-    print("=== tokamak orchestration  run_id=%s ===" % run_id, flush=True)
+    specs = SPECS[args.problem]
+    init_manifest(outdir, args, specs)
+    print("=== tokamak orchestration  run_id=%s  problem=%s ===" % (run_id, args.problem), flush=True)
     print("    artifacts -> %s" % outdir, flush=True)
     stages = [s.strip() for s in args.stages.split(",") if s.strip()]
 
@@ -376,7 +452,7 @@ async def run(args):
             print("[model] cached, skipping (use --force to rerun)", flush=True)
             model = load_json(os.path.join(outdir, "model.json"))
         else:
-            model = await stage_model(outdir)
+            model = await stage_model(outdir, specs["science"])
     if model is None and os.path.isfile(os.path.join(outdir, "model.json")):
         model = load_json(os.path.join(outdir, "model.json"))
 
@@ -384,13 +460,13 @@ async def run(args):
         if stage_done(outdir, "na") and not args.force:
             print("[na] cached, skipping (use --force to rerun)", flush=True)
         else:
-            await stage_na(outdir, model or {})
+            await stage_na(outdir, model or {}, specs["science"])
 
     if "codegen" in stages:
         if stage_done(outdir, "codegen") and not args.force:
             print("[codegen] cached, skipping (use --force to rerun)", flush=True)
         else:
-            await stage_codegen(outdir)
+            await stage_codegen(outdir, specs["codegen"])
 
     m = load_manifest(outdir)
     m["finished"] = datetime.datetime.now().isoformat()
@@ -406,6 +482,9 @@ async def run(args):
 
 def main():
     ap = argparse.ArgumentParser(description="Drive the PETSc multi-agent system for the tokamak GS problem.")
+    ap.add_argument("--problem", default="mms", choices=list(SPECS),
+                    help="which problem to generate: mms (toy manufactured Solov'ev) or "
+                         "shaped (Cerfon-Freidberg real-machine equilibrium)")
     ap.add_argument("--stages", default="model,na,codegen",
                     help="comma list of stages to run: model,na,codegen (default all)")
     ap.add_argument("--resume", default=None, metavar="RUN_ID",

@@ -227,3 +227,102 @@ python-docx in either venv.
 package before **Aug 7** — export `poster/abstract.md` → PDF for EasyChair, and fill the
 presenter names into the poster PPTX + slide 1 so all three artifacts agree. Then (post-deadline)
 tackle **real-machine shaping** to strengthen the physics story. Confirm with the user.
+
+---
+
+## Session 4 — 2026-08-05
+
+**Plan change (user directive).** Reorder the remaining work: do roadmap milestone **9
+(real-machine shaping)** *before* finalizing the USRSE'26 poster. Rationale: the shaped
+equilibrium results are meant to strengthen the abstract prior to the final EasyChair PDF
+export. (NB deadline tension — EasyChair abstract nominally due **Aug 7**; user is aware and
+chose this order. The abstract `.md` + `.docx` already carry both presenters, so "finalize"
+is mainly the PDF export, which is quick once the shaping results are folded in.)
+
+**Done.**
+- **Poster author line filled** — `poster/make_poster.py` `auth=` (was `[PRESENTER NAME],
+  <email>, ORCID …`) now reads *"Sarthak Sharma (State University of New York at Buffalo)  ·
+  Dr Junchao Zhang (Mathematics and Computer Science Division, Argonne National Laboratory)  ·
+  US-RSE 2026"*. Script still compiles (`py_compile` clean). **Built artifacts NOT yet
+  regenerated** — `poster/USRSE26_poster.pptx` + preview `.png`/`.pdf` still show the old
+  placeholder; they'll be rebuilt during poster finalization (after #9) with
+  `/home/sarthak.sharma/tokamak/.venv/bin/python poster/make_poster.py`.
+- **Roadmap updated** (`docs/ROADMAP.md`): plan-change note added; milestone 9 → **NEXT**;
+  milestone 7 → deferred until after #9; milestone 8 annotated **presented 2026-07-29**.
+
+**Slides — no further changes (user).** The user made the required slide edits themselves and
+**presented the deck at the ANL summer-intern event on 2026-07-29**. Milestone 8 is fully done;
+do not modify `slides/` (its `[PRESENTER NAME]` in `make_slides.py` is intentionally left — the
+delivered deck used the user's own edits).
+
+**Still open.**
+- **Real-machine shaping** (milestone 9, now NEXT): shaped Solov'ev/Cerfon–Freidberg D-shape +
+  X-point, q-profile, cross-check vs `~/tokamak` FreeGS.
+- **USRSE'26 poster finalization** (after #9): fold shaping results into the abstract if useful,
+  rebuild the poster PPTX/preview (author line now correct), export the EasyChair PDF.
+- **Push** both repos (user does this): project repo + `tokamak-improvements` branch upstream.
+
+**EXACT NEXT STEP (start here next session).** Begin **milestone 9 — real-machine shaping**:
+a shaped Solov'ev/Cerfon–Freidberg equilibrium (D-shape, X-point) with a q-profile, cross-checked
+against the FreeGS reference in `~/tokamak`. Poster finalization + EasyChair PDF export come
+*after* this per the Session-4 plan change. Confirm scope/approach with the user before generating.
+
+---
+
+## Session 5 — 2026-08-05
+
+**Goal.** Milestone 9 (real-machine shaping). User decisions: solver **agent-generated**
+(on-thesis); scope **multiple machines + X-point**; FreeGS cross-check **method + diagnostic**.
+
+**Approach.** Use the **Cerfon–Freidberg (2010) analytic Solov'ev solution** as the exact
+("manufactured") solution: it is a real-machine-shaped equilibrium (D-shape / X-point set by
+ε, κ, δ) *and* an exact closed-form GS solution, so the p ≈ 2 MMS verification carries over onto a
+physically shaped field. The GS operator/Jacobian are identical to the toy solver; only the exact
+solution, forcing, and (nonzero) boundary values change. One agent-generated **parametrized**
+solver in normalized coords `x = R/R0` serves all machines; per-machine coefficients are computed
+in Python and passed via a PETSc `-options_file`.
+
+**Done + verified (all three machines: ITER, NSTX-like spherical, X-point double-null).**
+- **`src/cerfon_freidberg.py`** — sympy CF construction: *proves* `Δ*ψ_i ≡ 0` and
+  `Δ*ψ_p ≡ (1−A)x²+A`, takes all constraint derivatives symbolically, solves the boundary/curvature
+  system, asserts ψ=0 at the shaping points (~1e-15) and — for the X-point case — |∇ψ|≈1.7e-14 at
+  the X-point (true magnetic saddle). Fixes ψ0 from Ip; writes `<machine>.opts` + `sidecar.json`.
+- **Agent generation** — `orchestrate_tokamak.py` gained `--problem {mms,shaped}` (specs threaded
+  through the stages; `manifest["problem"]` recorded; generated filename kept `grad_shafranov.c`).
+  Run `run-20260805-155724`: model→na→codegen (25 loops, 235 s) produced a **252-line** normalized-
+  coordinate solver that compiled + ran, correctly handling the **nonzero Dirichlet** BC
+  (`ψ = PsiExact` on the box edges, since the plasma boundary ψ=0 is an interior contour) and
+  reading the 12 coefficients via `PetscOptionsGetRealArray`. Zero human edits to the solver.
+- **`src/verify_shaped.py`** — grid ladder vs the CF analytic ψ → **observed order p = 2.00, 2.00,
+  2.00 for all three machines**; the same solver runs correctly on **1 and 4 MPI ranks** (matching
+  error; needs PETSc's own `mpiexec`). Measured κ, δ from the flux surfaces match input ε, κ, δ to
+  ~1–2%.
+- **`src/qprofile.py`** — safety factor `q(ψ_N)=(1/2π)∮F/(R|∇ψ|)dl` (contour integral). ITER
+  q0≈1.69, q95≈2.87; NSTX q95≈12.4 (ST-like); X-point q95≈3.19.
+- **`src/crosscheck_freegs.py`** — Technique A: our q vs FreeGS `find_safety` on the **same**
+  analytic field agree to **< 0.2%** (all three) — a two-algorithm validation of the integrator.
+  Technique B: shape-matched FreeGS free-boundary runs (iterlike / mastu / diiid); q95 neighbours
+  where FreeGS is reliable (X-point 3.19 vs DIII-D 3.25). (FreeGS `mastu` q95 is a placeholder
+  artifact — noted.)
+- **Metrics + figures + docs** — `collect_metrics.py` is now problem-aware (per-machine shaped
+  table); `verify_tokamak.py` refuses a shaped run. `src/make_shaped_figures.py` writes combined
+  poster figures `figures/shaped_{equilibria,convergence,qprofiles}.png`. Updated USAGE,
+  VERIFICATION, ENVIRONMENT, ROADMAP.
+
+**Design note.** The X-point case is an up-down **symmetric double-null** (X-points top & bottom),
+built from the 7 even CF basis functions with the high-point conditions replaced by X-point saddle
+conditions (ψ=ψ_x=ψ_y=0). Chosen over the 12-coefficient single-null asymmetric system because it
+is fully verifiable without the CF paper (web access blocked on this node) — a correct X-point
+equilibrium either way. Single-null is possible future work.
+
+**Environment gotchas discovered.** Three-venv split (mcp-test = no numpy; `/usr/bin/python3` =
+numpy/scipy/sympy; `~/tokamak/.venv` = FreeGS). Multi-rank needs PETSc's `mpiexec`, not the system
+PMIx one. Both recorded in `docs/ENVIRONMENT.md`.
+
+**Still open.** Poster finalization (fold shaping into the abstract; fill presenter names into the
+PPTX; export EasyChair PDF); push both repos (user).
+
+**EXACT NEXT STEP (start here next session).** Milestone 9 is complete and verified. Return to
+**USRSE'26 poster finalization** (the Session-4 plan deferred it): optionally add a shaped-equilibria
+figure/sentence to `poster/USRSE26_abstract.md`, rebuild the poster PPTX (author line already
+filled), and export the EasyChair PDF. Confirm with the user.

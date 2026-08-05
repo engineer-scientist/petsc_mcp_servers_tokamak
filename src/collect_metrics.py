@@ -44,6 +44,8 @@ def main():
     run_id = args.run or latest_run()
     run_dir = os.path.join(ARTIFACTS, run_id)
     man = load(os.path.join(run_dir, "manifest.json"))
+    if man.get("problem") == "shaped":
+        return _shaped_metrics(run_id, run_dir, man)
     ver = load(os.path.join(run_dir, "verification.json"))
     stages = man.get("stages", {})
 
@@ -101,6 +103,93 @@ def main():
         f.write(md)
     print(md)
     print("[metrics] wrote %s/metrics.json and metrics.md" % run_dir)
+
+
+def _shaped_metrics(run_id, run_dir, man):
+    """Decision-gate metrics for a SHAPED (multi-machine Cerfon-Freidberg) run: one row per
+    machine (observed order, finest error, q0/q95, measured kappa/delta) from
+    shaped_summary.json, plus the shared efficiency/human-effort figures."""
+    stages = man.get("stages", {})
+    cg = stages.get("codegen", {})
+    code_path = os.path.join(run_dir, "grad_shafranov.c")
+    code_lines = sum(1 for _ in open(code_path)) if os.path.isfile(code_path) else 0
+    machines = load(os.path.join(run_dir, "shaped_summary.json")).get("machines", {})
+    codegen_loops = cg.get("response_loops")
+    total_seconds = sum(v.get("seconds", 0) or 0 for v in stages.values())
+
+    def _mrow(d):
+        ms = d.get("measured_shape") or {}
+        return {
+            "observed_order_maxnorm": d.get("observed_order_maxnorm"),
+            "finest_grid_maxnorm_error": d.get("finest_grid_maxnorm_error"),
+            "q0": d.get("q0"), "q95": d.get("q95"),
+            "kappa_measured": ms.get("kappa_measured"), "delta_measured": ms.get("delta_measured"),
+            "mpi_ok": d.get("mpi_ok"),
+        }
+
+    metrics = {
+        "run": run_id, "problem": "shaped", "model": man.get("model"),
+        "correctness": {
+            "code_generated": bool(code_lines), "code_lines": code_lines,
+            "one_solver_all_machines": True,
+            "machines": {m: _mrow(d) for m, d in machines.items()},
+        },
+        "efficiency": {
+            "wallclock_seconds_total": round(total_seconds, 1),
+            "wallclock_by_stage": {k: v.get("seconds") for k, v in stages.items()},
+            "codegen_response_loops": codegen_loops,
+            "codegen_tool_calls": cg.get("tool_cnt"),
+            "approx_llm_completions": 2 + (codegen_loops or 0),
+        },
+        "human_effort": {
+            "solver_lines_handwritten": 0,
+            "solver_lines_agent_generated": code_lines,
+            "human_science_spec_chars": len(man.get("science_spec", "")),
+            "human_codegen_spec_chars": len(man.get("codegen_spec", "")),
+        },
+    }
+    with open(os.path.join(run_dir, "metrics.json"), "w") as f:
+        json.dump(metrics, f, indent=2)
+    md = _shaped_markdown(metrics)
+    with open(os.path.join(run_dir, "metrics.md"), "w") as f:
+        f.write(md)
+    print(md)
+    print("[metrics] wrote %s/metrics.json and metrics.md (shaped)" % run_dir)
+
+
+def _shaped_markdown(m):
+    c, e, h = m["correctness"], m["efficiency"], m["human_effort"]
+    lines = [
+        "## Shaped Grad-Shafranov decision-gate metrics -- run %s (model %s)\n" % (m["run"], m["model"]),
+        "One agent-generated solver (%d lines, 0 hand-written) verified across %d real-machine "
+        "equilibria.\n" % (c["code_lines"], len(c["machines"])),
+        "| Machine | observed order p | finest max-norm error | q0 | q95 | kappa (meas.) | delta (meas.) | MPI ok |",
+        "|---|---|---|---|---|---|---|---|",
+    ]
+    for name, d in c["machines"].items():
+        order = ", ".join("%.2f" % p for p in (d["observed_order_maxnorm"] or []) if p == p) or "n/a"
+        fe = d["finest_grid_maxnorm_error"]
+        lines.append("| %s | %s | %s | %s | %s | %s | %s | %s |" % (
+            name, order, ("%.2e" % fe) if fe else "n/a",
+            _fmt(d["q0"]), _fmt(d["q95"]), _fmt(d["kappa_measured"]), _fmt(d["delta_measured"]),
+            d["mpi_ok"]))
+    lines += [
+        "",
+        "| Dimension | Metric | Value |", "|---|---|---|",
+        "| Efficiency | total wall-clock (s) | %s |" % e["wallclock_seconds_total"],
+        "| Efficiency | code-gen LLM loops / tool calls | %s / %s |" % (
+            e["codegen_response_loops"], e["codegen_tool_calls"]),
+        "| Human effort | solver lines hand-written | %s |" % h["solver_lines_handwritten"],
+        "| Human effort | solver lines agent-generated | %s |" % h["solver_lines_agent_generated"],
+        "| Human effort | problem-spec size (chars) | %s |" % (
+            h["human_science_spec_chars"] + h["human_codegen_spec_chars"]),
+        "",
+    ]
+    return "\n".join(lines)
+
+
+def _fmt(v):
+    return "%.3f" % v if isinstance(v, (int, float)) and v == v else "n/a"
 
 
 def _grep(text, key):

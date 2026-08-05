@@ -173,6 +173,14 @@ def main():
 
     run_id = args.run or latest_run()
     run_dir = os.path.join(ARTIFACTS, run_id)
+    # Guard: this toy verifier hardcodes the sin*sin manufactured solution + domain
+    # (RMIN/RMAX etc.). A shaped (Cerfon-Freidberg) run must be scored by verify_shaped.py,
+    # not here -- otherwise it would build the shaped solver but measure it against the wrong
+    # exact solution and draw a wrong figure. Refuse rather than silently mislead.
+    mpath = os.path.join(run_dir, "manifest.json")
+    if os.path.isfile(mpath) and json.load(open(mpath)).get("problem") == "shaped":
+        sys.exit("[verify] run %s is a SHAPED run -- use src/verify_shaped.py instead "
+                 "(this verifier is only for the toy sin*sin manufactured solution)." % run_id)
     workdir = os.path.join(PROJECT, "build", run_id)
     print("[verify] run=%s" % run_id)
     build(run_dir, workdir)

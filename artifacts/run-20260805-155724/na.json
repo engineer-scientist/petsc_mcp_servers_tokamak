@@ -1,0 +1,9 @@
+{
+  "select_approach": {
+    "grid": "structured-grid",
+    "discretization": "finite-differences"
+  },
+  "petsc_dm": "DMDA",
+  "problem_class": "nonlinear",
+  "petsc_solver": "SNES"
+}

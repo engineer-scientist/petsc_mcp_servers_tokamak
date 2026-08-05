@@ -1,0 +1,16 @@
+AssistantMessage from Claude: ```json
+{
+  "grid": "structured-grid",
+  "discretization": "finite-differences"
+}
+```
+
+Rationale: The Grad-Shafranov problem is posed on a rectangular poloidal box in normalized (x, y) coordinates with a Dirichlet condition, so a **structured-grid** maps naturally onto the domain. The Δ* operator is a smooth second-order elliptic operator and the Solov'ev/Cerfon-Freidberg source ((1−A)x² + A) is smooth, so **finite-differences** provide an accurate, simple discretization (the mild nonlinearity from the ψ-dependent source is handled with a nonlinear solver such as SNES). Because the PDE is time-independent, no `integrator` key is included.
+Located body of triple tick
+
+
+{
+  "grid": "structured-grid",
+  "discretization": "finite-differences"
+}
+

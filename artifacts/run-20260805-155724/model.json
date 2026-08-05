@@ -1,0 +1,5 @@
+{
+  "request": "the Grad-Shafranov equilibrium for a shaped, real-machine magnetically confined tokamak plasma using Solov'ev profiles that admit the Cerfon-Freidberg closed-form solution: the axisymmetric ideal-MHD force balance for the poloidal magnetic flux psi(R,Z), Delta^* psi = -mu0 R^2 dp/dpsi - F dF/dpsi, with Solov'ev profiles (dp/dpsi and F dF/dpsi constant) so that in normalized coordinates x=R/R0, y=Z/R0 the source reduces to (1-A) x^2 + A; this yields a physically shaped equilibrium whose plasma boundary (D-shape, possibly with an X-point) is set by the inverse aspect ratio, elongation and triangularity, with a Dirichlet boundary condition on the poloidal box",
+  "name": "Grad-Shafranov equation",
+  "time-dependent": false
+}

@@ -1,0 +1,68 @@
+{
+  "run": "run-20260805-155724",
+  "problem": "shaped",
+  "model": "claudeopus48",
+  "correctness": {
+    "code_generated": true,
+    "code_lines": 252,
+    "one_solver_all_machines": true,
+    "machines": {
+      "iter": {
+        "observed_order_maxnorm": [
+          1.9994465933077334,
+          2.0007400201412504,
+          1.9988136996128099
+        ],
+        "finest_grid_maxnorm_error": 1.118691e-07,
+        "q0": 1.686670591518339,
+        "q95": 2.8663427743298864,
+        "kappa_measured": 1.6913590493919843,
+        "delta_measured": 0.31575920939026947,
+        "mpi_ok": true
+      },
+      "nstx": {
+        "observed_order_maxnorm": [
+          2.0006229511004703,
+          2.000610485574863,
+          1.999612920885377
+        ],
+        "finest_grid_maxnorm_error": 2.797588e-06,
+        "q0": 1.5099121753055584,
+        "q95": 12.354379851253782,
+        "kappa_measured": 2.0211676284611158,
+        "delta_measured": 0.3364645571050995,
+        "mpi_ok": true
+      },
+      "xpoint": {
+        "observed_order_maxnorm": [
+          1.9971040588178839,
+          1.9978528461719967,
+          1.9998188873261051
+        ],
+        "finest_grid_maxnorm_error": 1.25269e-06,
+        "q0": 1.6388161515734037,
+        "q95": 3.1898288170301266,
+        "kappa_measured": 1.700409011877389,
+        "delta_measured": 0.3473480332873097,
+        "mpi_ok": true
+      }
+    }
+  },
+  "efficiency": {
+    "wallclock_seconds_total": 311.4,
+    "wallclock_by_stage": {
+      "model": 68.2,
+      "na": 8.5,
+      "codegen": 234.7
+    },
+    "codegen_response_loops": 25,
+    "codegen_tool_calls": 6,
+    "approx_llm_completions": 27
+  },
+  "human_effort": {
+    "solver_lines_handwritten": 0,
+    "solver_lines_agent_generated": 252,
+    "human_science_spec_chars": 664,
+    "human_codegen_spec_chars": 2877
+  }
+}

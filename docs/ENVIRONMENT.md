@@ -92,6 +92,29 @@ Compile/run agent working dir: `$PETSC_DIR/$PETSC_ARCH/work`
 5. **Shared compile/run work dir** — all callers share one directory; use unique
    filenames per run to avoid clobbering.
 
+## Milestone-9 analysis environment (venv split — must-read, Session 5)
+
+The shaped-equilibrium work spans **three** interpreters; using the wrong one fails:
+
+| Task | Interpreter | Why |
+|---|---|---|
+| Agent generation (`orchestrate_tokamak.py --problem shaped`) | `~/.venvs/mcp-test/bin/python` | MCP stack + Argo; **has no numpy** |
+| CF math / verify / q-profile / cross-check / figures | **`/usr/bin/python3`** | has numpy 1.26.4 + scipy 1.11.4 + **sympy 1.12** + matplotlib 3.6.3 |
+| FreeGS reference (spawned by `crosscheck_freegs.py`) | `~/tokamak/.venv/bin/python` | FreeGS 0.8.2 needs numpy<2 / scipy<1.14 |
+
+- **Never import `cerfon_freidberg` (or the other analysis modules) from the driver venv** — it
+  has no numpy. The driver only runs the agent stages; coefficients are computed separately under
+  `/usr/bin/python3` and passed to the generated solver via a PETSc `-options_file`.
+- **FreeGS is never imported into this repo's interpreters** — `crosscheck_freegs.py` shells out to
+  `~/tokamak/.venv/bin/python`.
+- **Multi-rank runs need PETSc's own `mpiexec`** (`$PETSC_DIR/$PETSC_ARCH/bin/mpiexec` →
+  `mpiexec.hydra`). The system `/usr/bin/mpiexec` uses PMIx, which is incompatible with PETSc's
+  MPICH and aborts `PetscInitialize` (`unsupported PMI version PMIx`). `verify_shaped.py` uses the
+  PETSc one automatically.
+- **`artifacts/LATEST` is problem-scoped**: a manifest carries `"problem": "mms" | "shaped"`.
+  `verify_tokamak.py` refuses a shaped run (it hardcodes the toy domain); `verify_shaped.py` and
+  `collect_metrics.py` detect the shaped run and behave accordingly.
+
 ## Quick smoke tests (Session 1, all PASS)
 
 ```bash

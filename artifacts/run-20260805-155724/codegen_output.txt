@@ -1,0 +1,5 @@
+Grid            : Nx = 65, Ny = 65
+Spacing         : hx = 1.100000e-02, hy = 1.870000e-02
+Max-norm error  : ||psi_h - PsiExact||_inf = 1.789351e-06
+Discrete L2 err : 9.495260e-07
+SNESGetConvergedReason: CONVERGED_FNORM_RELATIVE

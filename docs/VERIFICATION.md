@@ -96,3 +96,45 @@ closed-form.
 - Data: `figures/gs_verification.json`, `artifacts/run-20260723-113024/verification.json`.
 - Q&A prep: `slides/PRESENTATION_QA.md` §2 "Verification & correctness".
 - How to re-run the sweep: `docs/USAGE.md`, `docs/SESSION_LOG.md`.
+
+---
+
+## Milestone 9: verification of the shaped, real-machine equilibria
+
+Session 5 extended the same MMS idea to **physically shaped, real-machine** equilibria by
+swapping the toy `sin·sin` exact solution for the **Cerfon–Freidberg (2010) analytic Solov'ev
+solution**. That solution is both a real tokamak equilibrium (D-shape / X-point set by ε, κ, δ)
+*and* an exact closed-form answer, so the convergence test still applies — now on a physically
+meaningful field. Three layers of verification:
+
+1. **Symbolic (before any run).** `src/cerfon_freidberg.py` builds the solution with sympy and
+   *proves* the identities `Δ*ψ_i ≡ 0` for every basis function and `Δ*ψ_p ≡ (1−A)x²+A`, and
+   takes all boundary/curvature-constraint derivatives symbolically (no hand-differentiation).
+   It then asserts ψ = 0 at the shaping points to machine precision, and — for the X-point case —
+   that ∇ψ = 0 at the X-point (a genuine magnetic saddle, |∇ψ| ≈ 1.7×10⁻¹⁴).
+
+2. **Convergence (the headline).** `src/verify_shaped.py` builds the *agent-generated* solver and
+   runs the grid ladder against the CF analytic ψ. Observed order **p = 2.00, 2.00, 2.00** for
+   **all three machines** (ITER limiter D-shape, NSTX-like spherical, and an X-point double-null),
+   errors well above round-off. Same solver, correct on 1 and 4 MPI ranks (matching error).
+
+3. **q-profile cross-check vs FreeGS** (`src/crosscheck_freegs.py`). Our contour-integral safety
+   factor `q(ψ_N) = (1/2π)∮ F/(R|∇ψ|) dl` is checked against FreeGS's independent ray-traced
+   `find_safety` **on the identical field** — agreement to **< 0.2%** for all three machines
+   (a two-algorithm check of the integrator). A shape-matched FreeGS free-boundary run gives a
+   physics "neighbour" comparison of κ, δ, q95 (e.g. X-point q95 = 3.19 vs FreeGS DIII-D 3.25).
+   Measured κ, δ from the numerical flux surfaces match the *input* ε, κ, δ to ~1–2%.
+
+**Why this is stronger than the toy case for the poster:** a bug in the shaped operator, the
+nonzero Dirichlet boundary values (the plasma boundary ψ=0 is an *interior* contour here, not the
+box edge), or the coefficient handling would break the 2.00 convergence — yet the agent-generated
+solver hits it on three very different real-machine shapes with zero human edits to the solver.
+
+Data: `artifacts/<run>/shaped/<machine>/verification.json`, `artifacts/<run>/shaped_summary.json`,
+`artifacts/<run>/metrics.md`; figures `figures/shaped_{equilibria,convergence,qprofiles}.png`.
+
+**Note on the X-point case:** it is an up-down **symmetric double-null** (X-points top and
+bottom), built from the 7 even Cerfon–Freidberg basis functions with the high-point conditions
+replaced by X-point saddle conditions (ψ = ψ_x = ψ_y = 0). This is a correct, fully-verified
+X-point equilibrium; a *single-null* variant (the 12-coefficient asymmetric basis) is possible
+future work.

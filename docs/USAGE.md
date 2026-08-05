@@ -90,6 +90,47 @@ and `docs/AGENT_SYSTEM_CHANGES.md` change #6.
 > "Too many iterations" failure right after the code compiles. Apply `patches/0004-*.patch`
 > or use branch `tokamak-improvements`.
 
+## 5. Shaped, real-machine equilibria (milestone 9)
+
+A second problem type generates + verifies a **physically shaped** Grad–Shafranov equilibrium
+(D-shape / X-point) using the **Cerfon–Freidberg analytic Solov'ev** solution as the exact
+answer — a real-machine equilibrium that is *still* a closed-form solution, so the p ≈ 2
+manufactured-solution verification carries over. One agent-generated, parametrized solver
+(normalized coords `x = R/R0`) serves all machines; per-machine coefficients come from a PETSc
+options-file computed in Python.
+
+```bash
+# (a) agent-generate the shaped solver (mcp-test venv + Argo), same pipeline, new problem:
+cd /home/sarthak.sharma/petsc_mcp_servers_tokamak
+env PYTHONPATH=$MCP PETSC_DIR=$HOME/petsc PETSC_ARCH=arch-linux-c-opt \
+    $PYV src/orchestrate_tokamak.py --problem shaped
+
+# (b) verify convergence + q-profile + figures, per machine (/usr/bin/python3, NOT mcp-test):
+env PETSC_DIR=$HOME/petsc PETSC_ARCH=arch-linux-c-opt \
+    $PY3 src/verify_shaped.py --machines iter nstx xpoint --sizes 33 65 129 257
+
+# (c) cross-check q + shape against the FreeGS reference in ~/tokamak (its own venv, spawned):
+$PY3 src/crosscheck_freegs.py --machines iter nstx xpoint --run <run-id>
+
+# (d) metrics (per-machine table) + combined poster figures:
+$PY3 src/collect_metrics.py --run <run-id>
+$PY3 src/make_shaped_figures.py --run <run-id>
+```
+
+Artifacts land under `artifacts/<run>/shaped/<machine>/` (`verification.json`, `<machine>.opts`,
+`sidecar.json`, `flux_surfaces.png`, `qprofile.png`, `convergence.png`, `crosscheck.json`) plus
+`artifacts/<run>/shaped_summary.json`; combined figures go to `figures/shaped_*.png`.
+
+Notes / gotchas:
+- The **Python analysis modules** (`cerfon_freidberg.py`, `verify_shaped.py`, `qprofile.py`,
+  `crosscheck_freegs.py`, `make_shaped_figures.py`) need numpy/scipy/sympy → run them with
+  **`/usr/bin/python3`**, never the mcp-test venv (which has no numpy).
+- FreeGS runs in **`~/tokamak/.venv`** (numpy<2/scipy<1.14), spawned as a subprocess; it is never
+  imported into this repo's interpreters.
+- Multi-rank runs need **PETSc's own** `mpiexec` (`$PETSC_DIR/$PETSC_ARCH/bin/mpiexec`); the
+  system `/usr/bin/mpiexec` uses an incompatible PMI and aborts `PetscInitialize`.
+- `src/verify_tokamak.py` (the toy sin·sin verifier) refuses a shaped run — use `verify_shaped.py`.
+
 ## Troubleshooting
 
 - *Inner agent says the only tool is "DesignSync" / cannot compile* → you are on an old

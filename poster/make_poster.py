@@ -135,7 +135,7 @@ def build_spec():
     title = dict(
         title="Automated Problem-to-Solution Generation for a Tokamak Fusion-Plasma Simulation",
         sub="A hierarchical multi-agent PETSc system: from a plain-language prompt to a verified Grad-Shafranov solver",
-        auth="[PRESENTER NAME], <email>, ORCID  ·  Mathematics and Computer Science Division, Argonne National Laboratory  ·  US-RSE 2026",
+        auth="Sarthak Sharma (State University of New York at Buffalo)  ·  Dr Junchao Zhang (Mathematics and Computer Science Division, Argonne National Laboratory)  ·  US-RSE 2026",
     )
     return dict(title=title, panels=panels, figs=figs, run_id=run_id)
 

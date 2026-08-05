@@ -1,0 +1,34 @@
+
+% Grad--Shafranov equilibrium, Solov'ev profiles (Cerfon--Freidberg normalization)
+% x = R/R0, y = Z/R0, A = Solov'ev constant, S(x) = (1-A)x^2 + A.
+
+% ---------- Dimensional strong form ----------
+\[
+\Delta^{*}\psi
+\;\equiv\; R\,\frac{\partial}{\partial R}\!\left(\frac{1}{R}\frac{\partial \psi}{\partial R}\right)
++ \frac{\partial^{2}\psi}{\partial Z^{2}}
+\;=\; -\,\mu_{0}R^{2}\,\frac{dp}{d\psi} \;-\; F\,\frac{dF}{d\psi}.
+\]
+
+% ---------- Normalized (Solov'ev) strong form ----------
+\[
+\Delta^{*}\psi
+\;\equiv\;\frac{\partial^{2}\psi}{\partial x^{2}}
+-\frac{1}{x}\frac{\partial \psi}{\partial x}
++\frac{\partial^{2}\psi}{\partial y^{2}}
+\;=\; x\,\nabla\!\cdot\!\Big(\tfrac{1}{x}\,\nabla\psi\Big)
+\;=\;(1-A)\,x^{2}+A
+\quad \text{in } \Omega,
+\]
+\[
+\psi = 0 \quad \text{on } \partial\Omega .
+\]
+
+% ---------- Weak (variational) form ----------
+% Find psi in H^1(Omega), psi = 0 on dOmega, such that for all v in H^1_0(Omega):
+\[
+\int_{\Omega}\frac{1}{x}\,\nabla\psi\cdot\nabla v \;\, dx\,dy
+\;=\;
+-\int_{\Omega}\frac{(1-A)x^{2}+A}{x}\,v \;\, dx\,dy
+\qquad \forall\, v \in H_{0}^{1}(\Omega).
+\]
