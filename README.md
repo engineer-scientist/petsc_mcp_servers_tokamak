@@ -1,5 +1,4 @@
-# System of multiple AI agents to automate the simulation workflow in plasma physics. 
-# Application in nuclear fusion energy. 
+# System of multiple AI agents to automate the simulation workflow in plasma physics (application in nuclear fusion energy). 
 
 Automatically generate, verify, and run a **PETSc simulation of tokamak plasma** (nuclear
 fusion MHD) using the PETSc **multi-agent AI system**
