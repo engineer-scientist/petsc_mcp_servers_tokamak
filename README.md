@@ -1,4 +1,5 @@
-# PETSc multi-agent tokamak-plasma simulation
+# System of multiple AI agents to automate the simulation workflow in plasma physics. 
+# Application in nuclear fusion energy. 
 
 Automatically generate, verify, and run a **PETSc simulation of tokamak plasma** (nuclear
 fusion MHD) using the PETSc **multi-agent AI system**
@@ -43,8 +44,8 @@ Canonical run: `artifacts/run-20260723-113024/`. Figures in `figures/`, decision
 metrics in `artifacts/<run>/metrics.md`, draft poster abstract + 10-slide deck in
 `poster/` and `slides/`. See `docs/SESSION_LOG.md` for what's next.
 
-## Related work on this machine (not part of this repo)
+## Related work on this machine (not part of this repository)
 
-`~/tokamak` — a hand-built (Claude Code, **not** via the MCP agents) validated tokamak
+`~/tokamak` — a commercial-agent-built (Claude Code, **not** via the MCP agents) validated tokamak
 stack (Grad–Shafranov via FreeGS, Vlasov–Poisson PIC, C Landau collision operator, single
 GPU). Used here only as a **physics cross-check** reference.
