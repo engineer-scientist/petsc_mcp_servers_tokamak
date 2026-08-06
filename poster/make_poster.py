@@ -29,7 +29,7 @@ BLUE = "#002B5C"; TEAL = "#007D8A"; DARK = "#1F1F1F"; GREY = "#4A4A4A"; WHITE = 
 # ---- poster-appropriate font sizes (points) ----
 F_TITLE, F_SUB, F_AUTH = 66, 34, 27
 F_HEAD, F_BODY, F_SMALL, F_EQ, F_CODE, F_CAP = 40, 30, 27, 40, 23, 25
-BAND_H = 5.8   # title band height (inches)
+BAND_H = 4.4   # title band height (inches) -- snug around title + subtitle + authors + affiliations
 
 
 def latest_run():
@@ -177,7 +177,7 @@ def build_spec():
 
     colw, gut = 14.9, 0.55
     x1 = 0.7; x2 = x1 + colw + gut; x3 = x2 + colw + gut
-    ytop, ybot = 6.4, 33.1                              # leave a logo footer below the columns
+    ytop, ybot = 5.0, 33.1                              # start below the (tighter) band; logo footer below
 
     # ---- column 1: why + method ------------------------------------------------
     col1 = [
@@ -256,10 +256,20 @@ def build_spec():
         pp, ff = _layout_column(x, colw, col, ytop, ybot, gut)
         panels += pp; figs += ff
 
+    # Auto-fit the title font so the (long) title fills the band on a single full-width line
+    # (0.58 em/char is a conservative width estimate for the bold sans title).
+    title_text = "A System of Multiple AI Agents for Automating Tokamak-Plasma Simulation for Nuclear Fusion Energy"
+    tfont = F_TITLE
+    while tfont > 40 and len(title_text) * (0.58 * tfont / 72.0) > (W - 1.6):
+        tfont -= 2
     title = dict(
-        title="A System of Multiple AI Agents for Automating Tokamak-Plasma Simulation for Nuclear Fusion Energy",
+        title=title_text,
+        tfont=tfont,
         sub="A hierarchical multi-agent PETSc system: from a plain-language prompt to verified, real-machine Grad-Shafranov equilibria",
-        auth="Sarthak Sharma (State University of New York at Buffalo)  ·  Dr Junchao Zhang (Mathematics and Computer Science Division, Argonne National Laboratory)  ·  US-RSE 2026",
+        auth="Sarthak Sharma¹  ·  Dr Junchao Zhang²  ·  Prof Matthew Knepley¹  ·  "
+             "Dr Lois Curfman McInnes²  ·  US-RSE 2026",
+        affil="¹ Computational and Data Sciences, State University of New York at Buffalo        "
+              "² Division of Mathematics and Computer Science, Argonne National Laboratory",
     )
     footer = dict(y=33.5, h=1.9, logos=[
         os.path.join(IMAGES, "ANL_logo.png"),
@@ -305,16 +315,20 @@ def render_preview(spec, out_png, out_pdf):
             yy += 0.12
         return yy
 
-    # title band (title wraps to ~2 lines; then subtitle, then authors)
+    # title band: full-width title, then subtitle, authors (with superscripts), affiliations
     ax.add_patch(Rectangle((0, Y(BAND_H)), W, BAND_H, color=BLUE, zorder=0))
-    yy = 0.45
-    for ln in textwrap.wrap(spec["title"]["title"], 47):
-        ax.text(0.8, Y(yy), ln, fontsize=F_TITLE, color=WHITE, va="top", fontweight="bold")
-        yy += F_TITLE / 72.0 * 1.16
-    yy += 0.18
+    tfont = spec["title"]["tfont"]
+    maxc = max(20, int((W - 1.6) / (0.58 * tfont / 72.0)))   # chars/line that fill the width
+    yy = 0.5
+    for ln in textwrap.wrap(spec["title"]["title"], maxc):
+        ax.text(0.8, Y(yy), ln, fontsize=tfont, color=WHITE, va="top", fontweight="bold")
+        yy += tfont / 72.0 * 1.16
+    yy += 0.16
     ax.text(0.8, Y(yy), spec["title"]["sub"], fontsize=F_SUB, color="#CFE6EA", va="top")
-    yy += F_SUB / 72.0 * 1.3 + 0.15
+    yy += F_SUB / 72.0 * 1.3 + 0.12
     ax.text(0.8, Y(yy), spec["title"]["auth"], fontsize=F_AUTH, color=WHITE, va="top")
+    yy += F_AUTH / 72.0 * 1.3 + 0.10
+    ax.text(0.8, Y(yy), spec["title"]["affil"], fontsize=F_SMALL - 4, color="#CFE6EA", va="top")
 
     # panels
     for p in spec["panels"]:
@@ -416,9 +430,10 @@ def render_pptx(spec, out):
     # title band
     rect(0, 0, W, BAND_H, BLUE)
     box(0.8, 0.35, W - 1.6, BAND_H - 0.6, [
-        (spec["title"]["title"], F_TITLE, WHITE, "b"),
+        (spec["title"]["title"], spec["title"]["tfont"], WHITE, "b"),
         (spec["title"]["sub"], F_SUB, "#CFE6EA"),
         (spec["title"]["auth"], F_AUTH, WHITE),
+        (spec["title"]["affil"], F_SMALL - 4, "#CFE6EA"),
     ])
 
     for p in spec["panels"]:

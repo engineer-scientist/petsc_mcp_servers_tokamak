@@ -1,15 +1,14 @@
 # Roadmap & status
 
 > Living document: the plan, current status, and active next step. Newest status in
-> `docs/SESSION_LOG.md`. Last updated: **2026-08-05** (Session 5).
+> `docs/SESSION_LOG.md`. Last updated: **2026-08-05** (Session 6).
 >
-> **Plan change (Session 4, 2026-08-05):** do milestone **9 (real-machine shaping)**
-> *before* finalizing the USRSE'26 poster — the shaped-equilibrium results are meant to
-> strengthen the abstract prior to the final EasyChair PDF export.
-> **Session 5 (2026-08-05): milestone 9 is DONE** — the shaped equilibria (ITER, NSTX,
-> X-point) are agent-generated + verified (p = 2.00) with q-profiles. Poster finalization
-> (fold in the shaping results, fill presenter names into the PPTX, export the EasyChair PDF)
-> is now the active next step.
+> **Session 5 (2026-08-05): milestone 9 DONE** — shaped equilibria (ITER, NSTX, X-point)
+> agent-generated + verified (p = 2.00) with q-profiles cross-checked vs FreeGS.
+> **Session 6 (2026-08-05): poster + abstract updated** — poster redesigned around the
+> milestone-9 results + the multi-agent architecture diagram + institution logos, 4 authors,
+> new title; abstract updated with the shaped-equilibria paragraph. **Remaining: export the
+> EasyChair abstract PDF, add the 2 new authors to the abstract (need emails/ORCIDs), push.**
 
 ## Objective
 
@@ -30,7 +29,7 @@ generation for PDE-based simulation science.
 | 4 | Post-processing figures (convergence, flux surfaces) | ✅ Session 1 · q-profile + shaped ✅ Session 5 |
 | 5 | Demonstrate the built-in **orchestrator** agent end-to-end (where feasible) | ✅ Session 2 (DMPLEX+PetscFE, 225 DOFs; +upstream cntlimit fix) |
 | 6 | **Metrics** vs the proposal's decision gates (correctness, human-time, tokens/cost) | ✅ Session 1 (`metrics.md`) |
-| 7 | **US-RSE 2026 poster** — abstract ✅ (md+docx) · presenter details ✅ (abstract + poster PPTX) · editable poster PPTX ✅ · PDF export for EasyChair ⬜ | 🟡 (deferred until after #9) |
+| 7 | **US-RSE 2026 poster** — abstract ✅ (md+docx, incl. shaped results) · poster PPTX/PDF/PNG ✅ (redesigned Session 6: milestone-9 results + agent-architecture diagram + logos + 4 authors + new title) · EasyChair abstract PDF ⬜ · add 2 new authors to abstract ⬜ (need emails/ORCIDs) | 🟡 |
 | 8 | **Argonne intern presentation** (slides) | ✅ **Presented at ANL intern event 2026-07-29** (13 slides on official ANL template) |
 | 9 | Real-machine shaping (Solov'ev/Cerfon–Freidberg D-shape + X-point, q-profile) | ✅ Session 5 (ITER + NSTX + X-point double-null; **p = 2.00** all three; q-profile cross-checked vs FreeGS to <0.2%) |
 | 10 | Stretch: harder physics (nonlinear profiles; time-dependent/resistive MHD) | ⬜ |

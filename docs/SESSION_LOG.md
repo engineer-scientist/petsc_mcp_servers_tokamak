@@ -326,3 +326,47 @@ PPTX; export EasyChair PDF); push both repos (user).
 **USRSE'26 poster finalization** (the Session-4 plan deferred it): optionally add a shaped-equilibria
 figure/sentence to `poster/USRSE26_abstract.md`, rebuild the poster PPTX (author line already
 filled), and export the EasyChair PDF. Confirm with the user.
+
+---
+
+## Session 6 — 2026-08-05 (poster + abstract finalization)
+
+**Goal.** Finalize the USRSE'26 poster and abstract around the milestone-9 results, per the user.
+
+**Done.**
+- **Combined figure fix.** `src/make_shaped_figures.py` `flux_panel` now sizes each equilibrium
+  panel to its own aspect ratio (`width_ratios` + matched figsize), removing the wasted
+  horizontal space in `figures/shaped_equilibria.png` (reused for slides/reports too).
+- **Poster redesigned** (`poster/make_poster.py`, rebuilt `.pptx`/`.pdf`/`.png`): now leads with
+  the milestone-9 story — real-machine equilibria (`shaped_equilibria.png`), 2nd-order
+  convergence (`shaped_convergence.png`), and a "safety factor & FreeGS cross-check" panel.
+  Section 3 now features the **multi-agent architecture diagram**
+  (`images/system_of_multiple_AI_agents_to_automate_simulations.png`) instead of a text panel
+  (the generic fusion power-plant image was dropped for space). Added an **aspect-aware layout
+  helper** (`_layout_column` + `_panel_h`) so every column fills top-to-bottom with no empty
+  panel space, and a **logo footer** (Argonne, PETSc/TAO, University at Buffalo; the SUNY CMYK
+  JPEG is auto-converted to RGB in `poster/.logo_cache/`).
+- **Renamed outputs.** Dropped `_preview` → `poster/USRSE26_poster.pdf` / `.png` (alongside the
+  `.pptx`); removed the old `*_preview.*` files.
+- **Title + authors.** New title **"A System of Multiple AI Agents for Automating Tokamak-Plasma
+  Simulation for Nuclear Fusion Energy"** (user's choice), auto-fit to a single full-width line
+  (58 pt) so the title band has no empty top-right; band tightened 5.8→4.4 in. **Four authors
+  with superscript affiliations:** Sarthak Sharma¹, Dr Junchao Zhang², Prof Matthew Knepley¹,
+  Dr Lois Curfman McInnes² — ¹ Computational and Data Sciences, SUNY Buffalo; ² Division of
+  Mathematics and Computer Science, ANL. (Unicode ¹²; renders in PPTX + PNG/PDF.)
+- **Abstract** (`poster/USRSE26_abstract.md` → regenerated `.docx`): added the shaped-equilibria
+  paragraph (Cerfon–Freidberg; ITER/NSTX/X-point; p = 2.00; q cross-checked vs FreeGS <0.2%),
+  extended keywords, mirrored the new title, fixed the stale rebuild-command path.
+
+**Still open.**
+- **EasyChair abstract PDF** — export `poster/USRSE26_abstract.md` → PDF for submission
+  (`pandoc … --pdf-engine=xelatex`; xelatex is on this host). Nominal deadline **Aug 7, 2026**.
+- **Abstract author list** — the abstract's Presenters section still lists only the original two;
+  add Prof Knepley + Dr McInnes to match the poster (template wants `Name <email>, affiliation,
+  ORCID` — needs their emails/ORCIDs).
+- **Push** the working-tree changes (user).
+
+**EXACT NEXT STEP (start here next session).** Export the EasyChair abstract PDF (deadline
+**Aug 7**), then add the two new authors to `poster/USRSE26_abstract.md` (need emails/ORCIDs) and
+regenerate the `.docx`. Optional/future: milestone 10 (harder physics — nonlinear profiles,
+time-dependent/resistive MHD) and a single-null (12-coefficient) X-point variant.
