@@ -90,8 +90,6 @@ stops a genuinely successful run from being reported as a failure. Full before/a
 out the poster's succeed/fail + guardrails analysis and harder-physics cases (nonlinear
 profiles; time-dependent / resistive MHD), then push both repos upstream.
 
-## Related work on this machine (not part of this repository)
+## Related work (not part of this repository)
 
-`~/tokamak` — a commercial-agent-built (Claude Code, **not** via the MCP agents) validated tokamak
-stack (Grad–Shafranov via FreeGS, Vlasov–Poisson PIC, C Landau collision operator, single
-GPU). Used here only as a **physics cross-check** reference.
+`https://github.com/engineer-scientist/tokamak` — a commercial-agent-built (Claude Code, **not** via the MCP agents) validated tokamak stack (Grad–Shafranov via FreeGS, Vlasov–Poisson PIC, C Landau collision operator, single GPU). Used here only as a **physics cross-check** reference.
