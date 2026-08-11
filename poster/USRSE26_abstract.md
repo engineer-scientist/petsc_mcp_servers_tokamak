@@ -1,52 +1,107 @@
----
-geometry: margin=0.6in
-fontsize: 10pt
----
-
 <!--
-USRSE'26 abstract — source of truth. Rebuild the submission files with:
-  cd poster
-  pandoc USRSE26_abstract.md -o USRSE26_abstract.docx \
-    --reference-doc USRSE_2026_Posters_Submission_Template.docx
-  pandoc USRSE26_abstract.md -o USRSE26_abstract.pdf \
-    --pdf-engine=xelatex --include-in-header=abstract_header.tex
-
-Revision (2026-08-07): reoriented toward research-software-engineering per reviewer
-feedback (J. Zhang, L. C. McInnes) — dropped the "no human edits" narrative, compressed
-the physics, added the failure-modes/guardrails theme. Then condensed to fit one page
-(compact geometry + 3 tight paragraphs). Title kept per author request.
+USRSE'26 poster abstract. Structure follows USRSE_2026_Posters_Submission_Template.docx.
+Submit as PDF to EasyChair by Friday 2026-08-07. Numbers are filled from the canonical
+run's verification.json / metrics.json (see src/verify_tokamak.py, src/collect_metrics.py).
+Presenter details filled 2026-08-04; shaped real-machine results added 2026-08-05.
+Regenerate the .docx with:
+  pandoc poster/USRSE26_abstract.md -o poster/USRSE26_abstract.docx \
+    --reference-doc=poster/USRSE_2026_Posters_Submission_Template.docx
 -->
 
 # Title
 
-**A Multi-agent AI System for Automating Tokamak-Plasma Simulation for Nuclear Fusion Energy.**
+**A System of Multiple AI Agents for Automating Tokamak-Plasma Simulation for Nuclear Fusion Energy (with a Hierarchical Multi-Agent PETSc System)**
 
 # Presenters
 
-- Sarthak Sharma <ss694@buffalo.edu>, PhD candidate in Computational and Data Sciences, State University of New York at Buffalo, 0009-0009-6746-169X.
-- Dr Junchao Zhang <jczhang@anl.gov>, Division of Mathematics and Computer Science, Argonne National Laboratory, 0000-0003-0367-2358.
+Sarthak Sharma <ss694@buffalo.edu>, PhD candidate in Computational and Data Sciences, State University of New York at Buffalo, 0009-0009-6746-169X
+
+Dr Junchao Zhang <jczhang@anl.gov>, Division of Mathematics and Computer Science, Argonne National Laboratory, 0000-0003-0367-2358
 
 # Keywords
 
-AI agents for scientific computing; research software engineering; multi-agent code generation; verification and validation; reproducibility and provenance; guardrails and human-in-the-loop; PETSc; tokamak Grad–Shafranov equilibria (nuclear fusion).
+research software engineering; AI agents for scientific computing; PETSc; partial differential equations; magnetically confined fusion; shaped tokamak equilibria; safety factor; verification and validation
 
 # Abstract
 
-Building a correct, performant HPC simulation from a scientific idea still demands scarce, largely implicit expertise in numerical methods and library APIs. AI agents can now draft such code, but a draft that *looks* right is not one an engineer can *trust*. We take a research-software-engineering (RSE) view of a real fusion-energy problem: not whether AI can replace that expertise, but what an RSE must build **around** a multi-agent AI system — orchestration, verification gates, provenance, and guardrails — to make its output trustworthy. Using the PETSc multi-agent AI system (Model Context Protocol agents: <https://gitlab.com/petsc/petsc_mcp_servers>), we generate from a plain-language prompt a PETSc simulation of the tokamak **Grad–Shafranov equilibrium** (the force balance that sets a confined plasma's shape). Modeling, Numerical Analysis, and HPC Code Generation agents produce the solver; around them we built a project-owned orchestration driver that records every artifact with full provenance, and a verification harness that gates every result.
+Building a correct, performant HPC simulation from a scientific idea still demands scarce,
+largely implicit expertise in numerical methods and library APIs. We ask whether a
+**hierarchical multi-agent AI system** can automate that path for a real
+fusion-energy problem, and whether the result can be **verified** rather than merely
+plausible.
 
-We do not treat "it compiled and ran" as success: a grid-refinement study confirms textbook second-order convergence (*p* = 2.00) in MPI parallel — **verification, not the model's confidence, decides acceptance.** The same pipeline then produced one parameterized solver for several real-machine-shaped equilibria (e.g. an ITER-like D-shape and a diverted double-null with magnetic X-points), each verified against an exact analytic benchmark and cross-checked against an independent community code — scaling from the toy anchor to trustworthy shaped cases *without re-architecting the generated solver*.
+We use the PETSc multi-agent system (an open set of Model-Context-Protocol "agents":
+`gitlab.com/petsc/petsc_mcp_servers`) to generate, from a plain-language description, a
+PETSc simulation of the **tokamak Grad–Shafranov equilibrium** — the axisymmetric
+ideal-MHD force balance
+$\Delta^{*}\psi = -\mu_0 R^2\,p'(\psi) - F F'(\psi)$
+that sets the shape of the magnetically confined plasma. The system mirrors the
+three-layer architecture of the DOE proposal *Automated Problem-to-Solution Generation
+for PDE-Based Simulation Science*: a **Mathematical Modeling** agent, a **Numerical
+Analysis** agent, and an **HPC Code Generation** agent that writes, compiles, and runs
+PETSc C on the target machine — all driven against Argonne's Argo LLM gateway (Claude
+Opus 4.8). A project-owned orchestration driver records every structured
+intermediate artifact (model, discretization decision, generated source, build/run logs)
+with full provenance, making runs reproducible and resumable.
 
-This was not one-shot magic, and that is the software-engineering story. Running the agents on a shared HPC machine took environment and dependency wrangling, working-directory-independent process spawning, and graceful degradation when optional components are absent — plus **guardrails**: in one instructive failure a hard-coded iteration cap mislabeled a genuinely successful multi-stage run as a failure; we diagnosed it and contributed the fix upstream, one of several. Human effort is not eliminated but **relocated** — from writing solver code to engineering the orchestration, verification, and guardrails that make an AI system's output trustworthy and its failures legible. We report per-run decision-gate metrics (correctness, efficiency, where human effort went). Ongoing work deliberately raises the difficulty (nonlinear profiles, time-dependent/resistive magnetohydrodynamics, 3-D) to map where the system breaks and design the guardrails that keep engineers in control — the focus of the poster.
+From the prompt *"the Grad–Shafranov equilibrium for the magnetically confined plasma in
+a tokamak,"* the Modeling agent identified the equation and returned its strong and weak
+forms; the Numerical Analysis agent selected a nonlinear solve (`SNES`) on a structured
+grid; and the Code Generation agent produced a **267-line PETSc program** that
+discretizes the Grad–Shafranov operator on a `DMDA` with a true Jacobian and solves it
+with `SNES`, including a built-in **method-of-manufactured-solutions** check. The
+generated code compiled and ran on **1 and 4 MPI ranks** on an ANL CELS compute node with
+**no human edits**. Verification confirms the numerics: the max-norm error is
+**2.1×10⁻⁴** on a 65×65 grid and falls to **1.3×10⁻⁵** on 257×257, giving an **observed
+order of accuracy p = 2.00** (textbook second order for central differences) under grid
+refinement, with `SNES` reporting `CONVERGED_FNORM_RELATIVE`.
+
+We then drove the same pipeline into a **shaped, real-machine** regime. Using the analytic
+**Cerfon–Freidberg "one size fits all" Solov'ev** solution as an exact benchmark, a single
+agent-generated, parameterized PETSc solver reproduces **three physically shaped equilibria** —
+an **ITER-like D-shape**, a **spherical-tokamak (NSTX-like)** plasma, and a **diverted
+double-null with magnetic X-points** — set by the inverse aspect ratio, elongation, and
+triangularity. Each case is **verified at second order (p = 2.00)** against the analytic
+solution and runs on 1 and 4 MPI ranks with no human edits. We compute the **safety-factor
+profile q(ψ)** of each verified equilibrium and cross-check it against the independent
+**FreeGS** equilibrium code, obtaining agreement to **better than 0.2%** on identical fields,
+with the recovered elongation and triangularity matching the targets to ~1–2%. This shows the
+workflow scales from a toy verification anchor to trustworthy, real-machine-shaped equilibria
+without changing the generated solver's structure.
+
+We report **decision-gate metrics** — correctness (identified model, compiled/ran,
+convergence order), efficiency (wall-clock and LLM/tool calls), and human effort (0 lines
+of solver code hand-written) — and we contribute portability and robustness fixes back to
+the multi-agent system (CWD-independent server resolution; graceful operation where the
+documentation/RAG services are unavailable; a code-generation loop that captures results
+reliably). The work is a concrete demonstration that verification-driven, multi-agent
+problem-to-solution generation can produce trustworthy HPC simulation code for a
+flagship fusion-energy problem.
 
 # References
 
 1. B. Smith, H. Zhang, J. Zhang, S. Balay, L. Chen, M. Keçeli, L. C. McInnes. *Improving usability and productivity of PETSc with agent-based workflows.* 2026. doi:10.13140/RG.2.2.35234.80326.
-2. S. Balay et al. *PETSc/TAO Users Manual.* ANL-21/39 Rev. 3.25, Argonne National Laboratory, 2026. <https://petsc.org>.
-3. PETSc multi-agent MCP servers. <https://gitlab.com/petsc/petsc_mcp_servers>; <https://mcp.petsc-ai.org>.
-4. H. Grad, H. Rubin. *Hydromagnetic equilibria and force-free fields.* Proc. Second UN Conf. on the Peaceful Uses of Atomic Energy, 1958. (Grad–Shafranov equation.)
-5. A. J. Cerfon, J. P. Freidberg. *"One size fits all" analytic solutions to the Grad–Shafranov equation.* Physics of Plasmas 17, 032502, 2010.
-6. This work: <https://github.com/engineer-scientist/petsc_mcp_servers_tokamak>.
+2. L. C. McInnes et al. *Automated Problem-to-Solution Generation for PDE-Based Simulation Science.* Argonne National Laboratory proposal, DE-FOA-0003612, 2026.
+3. S. Balay et al. *PETSc/TAO Users Manual.* ANL-21/39 Rev. 3.25, Argonne National Laboratory, 2026. https://petsc.org
+4. PETSc multi-agent MCP servers. https://gitlab.com/petsc/petsc_mcp_servers ; https://mcp.petsc-ai.org
+5. H. Grad, H. Rubin. *Hydromagnetic equilibria and force-free fields.* Proc. 2nd UN Conf. on the Peaceful Uses of Atomic Energy, 1958. (Grad–Shafranov equation.)
+6. A. J. Cerfon, J. P. Freidberg. *"One size fits all" analytic solutions to the Grad–Shafranov equation.* Physics of Plasmas 17, 032502, 2010.
+7. This work: https://github.com/engineer-scientist/petsc_mcp_servers_tokamak
 
-# Connection to Mission, Goals, and Interests of US-RSE Community
+# Connection to Mission, Goals, & Interests of US-RSE Community
 
-Research software engineers increasingly sit between AI code-generation tools and the trusted, performance-critical libraries that underpin computational science. This is a candid RSE case study — not a toy benchmark — of *wrapping* an agentic AI system around a real HPC library (PETSc) for a real DoE-mission problem: the unglamorous engineering that makes such systems work on shared machines, and the guardrails needed when an agent silently does the wrong thing. Our theme is that AI does **not** replace the research software engineer; it relocates the work to orchestration, verification, and guardrails, with **verification as a first-class deliverable**. We hope the poster sparks discussion on how RSEs can responsibly adopt and harden AI-assisted scientific-software workflows.
+Research software engineers increasingly sit between AI code-generation tools and the
+trusted, performance-critical libraries that underpin computational science. This
+submission speaks directly to that intersection. It is a candid RSE case study of *using*
+an agentic system on a real HPC library (PETSc) for a real DOE-mission problem
+(fusion-energy plasma), rather than a toy benchmark — including the unglamorous
+engineering that makes such systems actually work on a shared compute node: environment
+and dependency wrangling, making services degrade gracefully when optional components are
+absent, working-directory-independent process spawning, and reproducible,
+provenance-tracked runs. We treat **verification as a first-class deliverable**: the
+generated simulation is checked against an exact solution and a grid-convergence study,
+reflecting the RSE community's emphasis on correctness, testing, and reproducibility over
+raw output. Finally, our improvements are contributed **back to the open-source
+multi-agent project** as patches, embodying the community's values of open, sustainable,
+and collaborative software. We hope the poster sparks discussion about how RSEs can
+responsibly adopt, evaluate, and harden AI-assisted workflows for scientific software.
